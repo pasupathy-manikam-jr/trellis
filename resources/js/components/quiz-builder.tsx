@@ -55,7 +55,7 @@ function Settings({ quiz }: { quiz: Quiz }) {
     });
 
     return (
-        <form
+        <form noValidate
             onSubmit={(e) => {
                 e.preventDefault();
                 patch(`/admin/quizzes/${quiz.id}`, { preserveScroll: true });
@@ -67,8 +67,6 @@ function Settings({ quiz }: { quiz: Quiz }) {
                 <Input
                     id="pass"
                     type="number"
-                    min={1}
-                    max={100}
                     value={data.pass_percent}
                     onChange={(e) => setData('pass_percent', Number(e.target.value))}
                 />
@@ -80,7 +78,6 @@ function Settings({ quiz }: { quiz: Quiz }) {
                 <Input
                     id="attempts"
                     type="number"
-                    min={1}
                     value={data.max_attempts}
                     onChange={(e) => setData('max_attempts', e.target.value)}
                     placeholder="unlimited"
@@ -260,7 +257,7 @@ function QuestionForm({
                     <DialogTitle>{question ? 'Edit question' : 'New question'}</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="flex flex-col gap-4">
+                <form noValidate onSubmit={submit} className="flex flex-col gap-4">
                     <div className="grid gap-2">
                         <Label>Prompt</Label>
                         <Textarea
@@ -306,7 +303,6 @@ function QuestionForm({
                             <Label>Points</Label>
                             <Input
                                 type="number"
-                                min={1}
                                 value={data.points}
                                 onChange={(e) => setData('points', Number(e.target.value))}
                             />

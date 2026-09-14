@@ -182,7 +182,7 @@ function EnrolBox({
     const free = course.price_cents === 0;
 
     return (
-        <form
+        <form noValidate
             onSubmit={(e) => {
                 e.preventDefault();
                 post(`/courses/${course.slug}/purchase`);

@@ -42,7 +42,7 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
                 <Flash />
                 <h1 className="text-xl font-semibold">Coupons</h1>
 
-                <form
+                <form noValidate
                     onSubmit={(e) => {
                         e.preventDefault();
                         post('/admin/coupons', { onSuccess: () => reset() });
@@ -79,8 +79,6 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
                             <Input
                                 id="percent"
                                 type="number"
-                                min={1}
-                                max={100}
                                 value={data.percent_off}
                                 onChange={(e) => setData('percent_off', e.target.value)}
                             />
@@ -92,7 +90,6 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
                             <Input
                                 id="amount"
                                 type="number"
-                                min={1}
                                 value={data.amount_off_cents}
                                 onChange={(e) => setData('amount_off_cents', e.target.value)}
                             />
@@ -107,11 +104,13 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
                         <Input
                             id="max"
                             type="number"
-                            min={1}
                             value={data.max_redemptions}
                             onChange={(e) => setData('max_redemptions', e.target.value)}
                             placeholder="unlimited"
                         />
+                        {errors.max_redemptions && (
+                            <p className="text-xs text-red-600">{errors.max_redemptions}</p>
+                        )}
                     </div>
 
                     <div className="grid gap-2">

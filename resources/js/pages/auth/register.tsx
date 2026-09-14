@@ -36,14 +36,13 @@ export default function Register() {
     return (
         <AuthLayout title="Create your account" description="Free to join. Enrol in a course whenever you are ready.">
             <Head title="Register" />
-            <form className="flex flex-col gap-6" onSubmit={submit}>
+            <form noValidate className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Name</Label>
                         <Input
                             id="name"
                             type="text"
-                            required
                             autoFocus
                             tabIndex={1}
                             autoComplete="name"
@@ -60,7 +59,6 @@ export default function Register() {
                         <Input
                             id="email"
                             type="email"
-                            required
                             tabIndex={2}
                             autoComplete="email"
                             value={data.email}
@@ -76,7 +74,6 @@ export default function Register() {
                         <Input
                             id="password"
                             type="password"
-                            required
                             tabIndex={3}
                             autoComplete="new-password"
                             value={data.password}
@@ -92,7 +89,6 @@ export default function Register() {
                         <Input
                             id="password_confirmation"
                             type="password"
-                            required
                             tabIndex={4}
                             autoComplete="new-password"
                             value={data.password_confirmation}

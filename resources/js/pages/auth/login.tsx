@@ -47,14 +47,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 </div>
             )}
 
-            <form className="flex flex-col gap-6" onSubmit={submit}>
+            <form noValidate className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email address</Label>
                         <Input
                             id="email"
                             type="email"
-                            required
                             autoFocus
                             tabIndex={1}
                             autoComplete="email"
@@ -77,7 +76,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <Input
                             id="password"
                             type="password"
-                            required
                             tabIndex={2}
                             autoComplete="current-password"
                             value={data.password}

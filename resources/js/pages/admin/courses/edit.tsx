@@ -82,7 +82,7 @@ function Details({ course }: { course: Course }) {
     });
 
     return (
-        <form
+        <form noValidate
             onSubmit={(e) => {
                 e.preventDefault();
                 post(`/admin/courses/${course.slug}`, { forceFormData: true });
@@ -147,7 +147,6 @@ function Details({ course }: { course: Course }) {
                 <Field label="Price (cents — 0 is free)" error={errors.price_cents}>
                     <Input
                         type="number"
-                        min={0}
                         value={data.price_cents}
                         onChange={(e) => setData('price_cents', Number(e.target.value))}
                     />
@@ -197,7 +196,7 @@ function Curriculum({ course }: { course: Course }) {
                 />
             ))}
 
-            <form
+            <form noValidate
                 onSubmit={(e) => {
                     e.preventDefault();
                     post(`/admin/courses/${course.slug}/sections`, { onSuccess: () => reset() });
@@ -221,19 +220,25 @@ function Curriculum({ course }: { course: Course }) {
 }
 
 function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: boolean; isLast: boolean }) {
-    const [title, setTitle] = useState(section.title);
     const [editing, setEditing] = useState<Lesson | 'new' | null>(null);
     const [quizFor, setQuizFor] = useState<Lesson | null>(null);
+    const { data, setData, patch, errors } = useForm({ title: section.title });
 
     return (
         <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-lg border">
-            <div className="flex items-center gap-2 border-b p-3">
-                <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={() => title !== section.title && router.patch(`/admin/sections/${section.id}`, { title })}
-                    className="h-8 font-medium"
-                />
+            <div className="flex items-start gap-2 border-b p-3">
+                <div className="flex-1">
+                    <Input
+                        value={data.title}
+                        onChange={(e) => setData('title', e.target.value)}
+                        onBlur={() =>
+                            data.title !== section.title &&
+                            patch(`/admin/sections/${section.id}`, { preserveScroll: true })
+                        }
+                        className="h-8 font-medium"
+                    />
+                    {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                </div>
                 <Move type="sections" id={section.id} isFirst={isFirst} isLast={isLast} />
                 <Destroy
                     url={`/admin/sections/${section.id}`}
@@ -356,7 +361,7 @@ function LessonDialog({
                     <DialogDescription>In section “{section.title}”.</DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="flex flex-col gap-4">
+                <form noValidate onSubmit={submit} className="flex flex-col gap-4">
                     <Field label="Title" error={errors.title}>
                         <Input autoFocus value={data.title} onChange={(e) => setData('title', e.target.value)} />
                     </Field>
@@ -379,7 +384,6 @@ function LessonDialog({
                         <Field label="Duration (seconds)" error={errors.duration_sec}>
                             <Input
                                 type="number"
-                                min={0}
                                 value={data.duration_sec}
                                 onChange={(e) => setData('duration_sec', e.target.value)}
                             />
@@ -388,7 +392,6 @@ function LessonDialog({
                         <Field label="Unlock after (days)" error={errors.drip_days}>
                             <Input
                                 type="number"
-                                min={0}
                                 value={data.drip_days}
                                 onChange={(e) => setData('drip_days', e.target.value)}
                             />
@@ -522,7 +525,7 @@ function Enrollments({ course, enrollments }: { course: Course; enrollments: Adm
                 </p>
             </div>
 
-            <form
+            <form noValidate
                 onSubmit={(e) => {
                     e.preventDefault();
                     post(`/admin/courses/${course.slug}/enrollments`, { onSuccess: () => reset() });

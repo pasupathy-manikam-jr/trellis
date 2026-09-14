@@ -104,7 +104,7 @@ function ReviewForm({ course, mine }: { course: Course; mine: ReviewSummary['min
     const [hover, setHover] = useState(0);
 
     return (
-        <form
+        <form noValidate
             onSubmit={(e) => {
                 e.preventDefault();
                 post(`/courses/${course.slug}/reviews`, { preserveScroll: true });

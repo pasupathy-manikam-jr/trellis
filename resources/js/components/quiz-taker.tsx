@@ -57,7 +57,7 @@ export function QuizTaker({ lessonId, quiz }: { lessonId: number; quiz: PlayerQu
     }
 
     return (
-        <form
+        <form noValidate
             onSubmit={(e) => {
                 e.preventDefault();
                 post(`/lessons/${lessonId}/quiz`, { preserveScroll: true });

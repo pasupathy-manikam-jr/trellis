@@ -25,7 +25,7 @@ export default function CourseCreate() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="New course" />
 
-            <form
+            <form noValidate
                 onSubmit={(e) => {
                     e.preventDefault();
                     post('/admin/courses');

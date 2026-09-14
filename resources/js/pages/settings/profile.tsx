@@ -41,7 +41,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                 <div className="space-y-6">
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
-                    <form onSubmit={submit} className="space-y-6">
+                    <form noValidate onSubmit={submit} className="space-y-6">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
 
@@ -50,7 +50,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 className="mt-1 block w-full"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                required
                                 autoComplete="name"
                                 placeholder="Full name"
                             />
@@ -67,7 +66,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 className="mt-1 block w-full"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                required
                                 autoComplete="username"
                                 placeholder="Email address"
                             />
