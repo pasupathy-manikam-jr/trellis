@@ -14,6 +14,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearnController;
+use App\Http\Controllers\LessonCommentController;
 use App\Http\Controllers\LessonCompletionController;
 use App\Http\Controllers\LessonVideoController;
 use App\Http\Controllers\OrderController;
@@ -40,6 +41,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('courses/{course}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::delete('reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::get('learn/{course}', [LearnController::class, 'show'])->name('learn.show');
+
+    Route::post('lessons/{lesson}/comments', [LessonCommentController::class, 'store'])->name('lessons.comments.store');
+    Route::patch('comments/{comment}/resolve', [LessonCommentController::class, 'resolve'])->name('comments.resolve');
+    Route::delete('comments/{comment}', [LessonCommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::post('lessons/{lesson}/quiz', [QuizAttemptController::class, 'store'])->name('lessons.quiz.attempt');
     Route::get('certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');

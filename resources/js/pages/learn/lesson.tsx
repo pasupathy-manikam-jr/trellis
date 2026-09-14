@@ -1,3 +1,4 @@
+import { Discussion, type Question } from '@/components/discussion';
 import { QuizTaker } from '@/components/quiz-taker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,8 @@ type Props = {
     enrolled: boolean;
     progress: Progress;
     certificate: { serial: string; issued_at: string } | null;
+    discussion: Question[];
+    can_comment: boolean;
 };
 
 export default function LessonPlayer({
@@ -27,6 +30,8 @@ export default function LessonPlayer({
     enrolled,
     progress,
     certificate,
+    discussion,
+    can_comment,
 }: Props) {
     const flat = outline.flatMap((s) => s.lessons);
     const index = flat.findIndex((l) => l.id === lesson.id);
@@ -218,6 +223,8 @@ export default function LessonPlayer({
                             )}
                         </div>
                     </div>
+
+                    <Discussion lessonId={lesson.id} questions={discussion} canComment={can_comment} />
 
                     {!enrolled && (
                         <div className="mt-6 rounded-xl border border-dashed p-4 text-sm">

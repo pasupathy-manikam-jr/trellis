@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\Enrollment;
@@ -151,7 +152,7 @@ test('category counts ignore drafts', function () {
 });
 
 test('deleting a category leaves its courses alone', function () {
-    $admin = User::factory()->create(['role' => App\Enums\UserRole::Admin]);
+    $admin = User::factory()->create(['role' => UserRole::Admin]);
     $cat = Category::factory()->create(['name' => 'Temporary']);
     $course = Course::factory()->published()->create();
     $course->categories()->attach($cat);

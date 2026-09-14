@@ -69,6 +69,11 @@ class Lesson extends Model
         return $enrollment !== null && ! $this->unlocksAt($enrollment)->isFuture();
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(LessonComment::class);
+    }
+
     public function completions(): HasMany
     {
         return $this->hasMany(LessonCompletion::class);

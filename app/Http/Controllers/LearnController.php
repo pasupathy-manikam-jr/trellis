@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\LessonComment;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,7 +56,47 @@ class LearnController extends Controller
             'enrolled' => $enrollment !== null,
             'progress' => $enrollment?->progress() ?? ['completed' => 0, 'total' => 0, 'percent' => 0],
             'certificate' => $enrollment?->certificate()?->only('serial', 'issued_at'),
+            'discussion' => $this->discussion($lesson, $user),
+            'can_comment' => $user?->can('create', [LessonComment::class, $lesson]) ?? false,
         ]);
+    }
+
+    /**
+     * The question thread for this lesson, one level deep. Authors and replies
+     * are eager-loaded, so the whole thread is two queries however long it is.
+     */
+    private function discussion(Lesson $lesson, ?User $user): array
+    {
+        $course = $lesson->section->course;
+
+        return $lesson->comments()
+            ->questions()
+            ->with(['author:id,name,role', 'replies.author:id,name,role'])
+            ->latest()
+            ->get()
+            ->map(fn (LessonComment $question) => [
+                ...$this->comment($question, $course, $user),
+                'resolved' => $question->resolved_at !== null,
+                'can_resolve' => $user?->can('resolve', $question) ?? false,
+                'replies' => $question->replies
+                    ->map(fn (LessonComment $reply) => $this->comment($reply, $course, $user))
+                    ->values(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /** @return array<string, mixed> */
+    private function comment(LessonComment $comment, Course $course, ?User $user): array
+    {
+        return [
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'created_at' => $comment->created_at,
+            'author' => $comment->author->name,
+            'from_staff' => $comment->isFromStaff($course),
+            'can_delete' => $user?->can('delete', $comment) ?? false,
+        ];
     }
 
     /**
