@@ -28,7 +28,7 @@ use Inertia\Inertia;
 
 Route::get('/', [CourseController::class, 'home'])->name('home');
 
-Route::get('handbook', fn () => Inertia::render('handbook'))->name('handbook');
+Route::get('handbook', fn () => Inertia::render('handbook/learner'))->name('handbook');
 
 Route::get('courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses.show');
@@ -61,6 +61,10 @@ Route::middleware(['auth'])->group(function () {
 
 // Admins and instructors share the course workspace; CoursePolicy@manage keeps
 // each instructor inside their own courses.
+Route::get('handbook/admin', fn () => Inertia::render('handbook/admin'))
+    ->middleware(['auth', 'staff'])
+    ->name('handbook.admin');
+
 Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('courses', AdminCourseController::class)->except('show');
 

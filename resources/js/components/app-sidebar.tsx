@@ -21,12 +21,13 @@ export function AppSidebar() {
         ...mainNavItems,
         { title: 'Browse courses', url: '/courses', icon: Library },
         { title: 'My orders', url: '/orders', icon: Receipt },
-        { title: 'Handbook', url: '/handbook', icon: BookOpen },
+        ...(auth.user?.role === 'student' ? [{ title: 'Handbook', url: '/handbook', icon: BookOpen }] : []),
         // Instructors get the course workspace; the rest stays with admins.
         ...(auth.user?.role === 'admin' || auth.user?.role === 'instructor'
             ? [
                   { title: 'Manage courses', url: '/admin/courses', icon: GraduationCap },
                   { title: 'Insights', url: '/admin/insights', icon: ChartNoAxesColumn },
+                  { title: 'Handbook', url: '/handbook/admin', icon: BookOpen },
               ]
             : []),
         ...(auth.user?.role === 'admin'
