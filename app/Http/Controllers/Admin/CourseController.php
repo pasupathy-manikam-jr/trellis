@@ -43,7 +43,7 @@ class CourseController extends Controller
     public function edit(Course $course): Response
     {
         return Inertia::render('admin/courses/edit', [
-            'course' => $course->load('sections.lessons'),
+            'course' => $course->load(['sections.lessons.quiz.questions.options']),
             'enrollments' => $course->enrollments()
                 ->with('user:id,name,email')
                 ->latest()

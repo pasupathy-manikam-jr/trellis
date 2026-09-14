@@ -1,22 +1,33 @@
+import { QuizTaker } from '@/components/quiz-taker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/public-layout';
 import { duration } from '@/lib/format';
-import { type Course, type OutlineSection, type PlayerLesson, type Progress } from '@/types';
+import { type Course, type OutlineSection, type PlayerLesson, type PlayerQuiz, type Progress } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Check, Download, FileText, Lock, Play } from 'lucide-react';
+import { Award, Check, Download, FileText, ListChecks, Lock, Play } from 'lucide-react';
 
-const icons = { video: Play, text: FileText, download: Download };
+const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks };
 
 type Props = {
     course: Pick<Course, 'id' | 'slug' | 'title'>;
     outline: OutlineSection[];
     lesson: PlayerLesson;
+    quiz: PlayerQuiz | null;
     enrolled: boolean;
     progress: Progress;
+    certificate: { serial: string; issued_at: string } | null;
 };
 
-export default function LessonPlayer({ course, outline, lesson, enrolled, progress }: Props) {
+export default function LessonPlayer({
+    course,
+    outline,
+    lesson,
+    quiz,
+    enrolled,
+    progress,
+    certificate,
+}: Props) {
     const flat = outline.flatMap((s) => s.lessons);
     const index = flat.findIndex((l) => l.id === lesson.id);
     const previous = flat[index - 1];
@@ -38,6 +49,15 @@ export default function LessonPlayer({ course, outline, lesson, enrolled, progre
                     <Link href={`/courses/${course.slug}`} className="text-sm font-medium hover:underline">
                         ← {course.title}
                     </Link>
+
+                    {certificate && (
+                        <a
+                            href={`/certificates/${certificate.serial}/download`}
+                            className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-600/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+                        >
+                            <Award className="size-4" /> Download certificate
+                        </a>
+                    )}
 
                     {enrolled && (
                         <div className="mt-3">
@@ -143,8 +163,20 @@ export default function LessonPlayer({ course, outline, lesson, enrolled, progre
                         <div className="mt-6 text-sm leading-relaxed whitespace-pre-wrap">{lesson.content}</div>
                     )}
 
+                    {quiz && enrolled && (
+                        <div className="mt-6">
+                            <QuizTaker lessonId={lesson.id} quiz={quiz} />
+                        </div>
+                    )}
+
+                    {quiz && !enrolled && (
+                        <p className="text-muted-foreground mt-6 rounded-xl border border-dashed p-4 text-sm">
+                            Enrol to sit this quiz.
+                        </p>
+                    )}
+
                     <div className="mt-8 flex flex-wrap items-center gap-2 border-t pt-4">
-                        {enrolled && (
+                        {enrolled && lesson.type !== 'quiz' && (
                             <Button
                                 onClick={toggleComplete}
                                 variant={lesson.completed ? 'secondary' : 'default'}

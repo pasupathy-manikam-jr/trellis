@@ -4,10 +4,14 @@ namespace Database\Seeders;
 
 use App\Enums\CourseStatus;
 use App\Enums\LessonType;
+use App\Enums\QuestionType;
 use App\Enums\UserRole;
 use App\Models\Coupon;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\Option;
+use App\Models\Question;
+use App\Models\Quiz;
 use App\Models\Section;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -94,6 +98,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        $this->seedQuiz($course);
+
         // Left unbought on purpose: the paid course is the one to try checkout on.
         Coupon::create(['code' => 'LAUNCH20', 'percent_off' => 20]);
         Coupon::create(['code' => 'HALFOFF', 'percent_off' => 50, 'max_redemptions' => 2]);
@@ -105,5 +111,53 @@ class DatabaseSeeder extends Seeder
             'title' => 'A draft that should not appear publicly',
             'status' => CourseStatus::Draft,
         ]);
+    }
+
+    /** A short quiz on the last section, so finishing the course means passing it. */
+    private function seedQuiz(Course $course): void
+    {
+        $lesson = Lesson::create([
+            'section_id' => $course->sections()->orderByDesc('position')->first()->id,
+            'title' => 'Check what you learned',
+            'type' => LessonType::Quiz,
+        ]);
+
+        $quiz = Quiz::create(['lesson_id' => $lesson->id, 'pass_percent' => 70, 'max_attempts' => 3]);
+
+        $bank = [
+            ['Where should gated video files live?', QuestionType::Single, [
+                ['storage/app/private — behind an access check', true],
+                ['storage/app/public — it is faster', false],
+                ['In the database as a blob', false],
+            ]],
+            ['Which belong in a course-selling LMS? Pick all.', QuestionType::Multi, [
+                ['Enrolments', true],
+                ['A gradebook with weighted categories', false],
+                ['Certificates', true],
+                ['SCORM packages', false],
+            ]],
+            ['Why is progress computed rather than stored?', QuestionType::Single, [
+                ['Editing a course cannot leave a stale percentage', true],
+                ['It is faster to query', false],
+                ['Postgres cannot store integers', false],
+            ]],
+        ];
+
+        foreach ($bank as [$prompt, $type, $options]) {
+            $question = Question::create([
+                'quiz_id' => $quiz->id,
+                'type' => $type,
+                'prompt' => $prompt,
+                'points' => $type === QuestionType::Multi ? 2 : 1,
+            ]);
+
+            foreach ($options as [$text, $correct]) {
+                Option::create([
+                    'question_id' => $question->id,
+                    'text' => $text,
+                    'is_correct' => $correct,
+                ]);
+            }
+        }
     }
 }

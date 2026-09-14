@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Progress } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2 } from 'lucide-react';
+import { Award, CheckCircle2 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -11,6 +11,7 @@ type Enrollment = {
     course: { slug: string; title: string; summary: string | null };
     progress: Progress;
     completed_at: string | null;
+    certificate: { serial: string } | null;
 };
 
 export default function Dashboard({ enrollments }: { enrollments: Enrollment[] }) {
@@ -30,7 +31,7 @@ export default function Dashboard({ enrollments }: { enrollments: Enrollment[] }
                     </div>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {enrollments.map(({ id, course, progress, completed_at }) => (
+                        {enrollments.map(({ id, course, progress, completed_at, certificate }) => (
                             <Link
                                 key={id}
                                 href={`/learn/${course.slug}`}
@@ -45,6 +46,21 @@ export default function Dashboard({ enrollments }: { enrollments: Enrollment[] }
 
                                 {course.summary && (
                                     <p className="text-muted-foreground line-clamp-2 text-sm">{course.summary}</p>
+                                )}
+
+                                {certificate && (
+                                    <span
+                                        role="link"
+                                        tabIndex={0}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            window.location.href = `/certificates/${certificate.serial}/download`;
+                                        }}
+                                        className="flex w-fit items-center gap-1.5 rounded-md border border-emerald-600/20 bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+                                    >
+                                        <Award className="size-3.5" /> Certificate
+                                    </span>
                                 )}
 
                                 <div className="mt-auto">

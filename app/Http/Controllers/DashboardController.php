@@ -21,6 +21,7 @@ class DashboardController extends Controller
                     'course' => $e->course->only('slug', 'title', 'summary'),
                     'progress' => $e->progress(),
                     'completed_at' => $e->completed_at,
+                    'certificate' => $e->certificate()?->only('serial'),
                 ]),
         ]);
     }

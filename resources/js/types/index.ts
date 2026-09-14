@@ -33,7 +33,7 @@ export type UserRole = 'admin' | 'instructor' | 'student';
 
 export type CourseStatus = 'draft' | 'published' | 'archived';
 
-export type LessonType = 'video' | 'text' | 'download';
+export type LessonType = 'video' | 'text' | 'download' | 'quiz';
 
 export interface Lesson {
     id: number;
@@ -45,6 +45,43 @@ export interface Lesson {
     duration_sec: number | null;
     position: number;
     is_preview: boolean;
+    quiz?: Quiz | null;
+}
+
+export type QuestionType = 'single' | 'multi';
+
+export interface QuizOption {
+    id: number;
+    text: string;
+    is_correct?: boolean;
+}
+
+export interface QuizQuestion {
+    id: number;
+    type: QuestionType;
+    prompt: string;
+    points: number;
+    options: QuizOption[];
+}
+
+export interface Quiz {
+    id: number;
+    pass_percent: number;
+    max_attempts: number | null;
+    shuffle: boolean;
+    questions: QuizQuestion[];
+}
+
+export interface PlayerQuiz {
+    id: number;
+    pass_percent: number;
+    max_attempts: number | null;
+    attempts_left: number | null;
+    attempts_taken: number;
+    passed: boolean;
+    can_attempt: boolean;
+    best_score: number | null;
+    questions: QuizQuestion[];
 }
 
 export interface Section {

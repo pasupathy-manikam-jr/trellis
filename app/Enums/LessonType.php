@@ -7,4 +7,5 @@ enum LessonType: string
     case Video = 'video';
     case Text = 'text';
     case Download = 'download';
+    case Quiz = 'quiz';
 }

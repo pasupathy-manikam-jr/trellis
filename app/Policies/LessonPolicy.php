@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\CourseStatus;
+use App\Enums\LessonType;
 use App\Models\Lesson;
 use App\Models\User;
 
@@ -32,9 +33,21 @@ class LessonPolicy
         return $course->enrollmentFor($user) !== null;
     }
 
-    /** Progress is only recorded for people actually enrolled — previews do not count. */
+    /**
+     * Progress is only recorded for people actually enrolled — previews do not count.
+     * A quiz lesson is never ticked by hand: it completes by being passed, which is
+     * what makes "finished the course" mean the quizzes were actually answered.
+     */
     public function complete(User $user, Lesson $lesson): bool
     {
-        return $lesson->section->course->enrollmentFor($user) !== null;
+        return $lesson->type !== LessonType::Quiz
+            && $lesson->section->course->enrollmentFor($user) !== null;
+    }
+
+    /** Sitting the quiz attached to a lesson requires the same access as the lesson. */
+    public function attempt(User $user, Lesson $lesson): bool
+    {
+        return $lesson->type === LessonType::Quiz
+            && $lesson->section->course->enrollmentFor($user) !== null;
     }
 }

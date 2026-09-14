@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,6 +30,8 @@ class LearnController extends Controller
 
         $this->authorize('view', $lesson);
 
+        $lesson->load('quiz');
+
         $user = $request->user();
         $enrollment = $course->enrollmentFor($user);
         $isStaff = $user?->isAdmin() || $user?->id === $course->instructor_id;
@@ -43,9 +46,48 @@ class LearnController extends Controller
                 'completed' => in_array($lesson->id, $completedIds, true),
                 'video_url' => $lesson->video_path ? route('lessons.video', $lesson) : null,
             ],
+            'quiz' => $this->quizPayload($lesson, $user),
             'enrolled' => $enrollment !== null,
             'progress' => $enrollment?->progress() ?? ['completed' => 0, 'total' => 0, 'percent' => 0],
+            'certificate' => $enrollment?->certificate()?->only('serial', 'issued_at'),
         ]);
+    }
+
+    /**
+     * Questions and options for a quiz lesson — with `is_correct` stripped, since
+     * the answer key would otherwise ship to the browser alongside the question.
+     */
+    private function quizPayload(Lesson $lesson, ?User $user): ?array
+    {
+        if (! $lesson->isQuiz() || ! $lesson->quiz) {
+            return null;
+        }
+
+        $quiz = $lesson->quiz;
+        $best = $user ? $quiz->attemptsBy($user)->orderByDesc('score_percent')->first() : null;
+
+        return [
+            'id' => $quiz->id,
+            'pass_percent' => $quiz->pass_percent,
+            'max_attempts' => $quiz->max_attempts,
+            'attempts_left' => $user ? $quiz->attemptsLeft($user) : $quiz->max_attempts,
+            'attempts_taken' => $user ? $quiz->attemptsBy($user)->count() : 0,
+            'passed' => $user ? $quiz->isPassedBy($user) : false,
+            'can_attempt' => $user ? $quiz->canBeAttemptedBy($user) : false,
+            'best_score' => $best?->score_percent,
+            'questions' => $quiz->questions()->with('options')->get()
+                ->when($quiz->shuffle, fn ($q) => $q->shuffle())
+                ->map(fn ($question) => [
+                    'id' => $question->id,
+                    'type' => $question->type->value,
+                    'prompt' => $question->prompt,
+                    'points' => $question->points,
+                    'options' => $question->options
+                        ->when($quiz->shuffle, fn ($o) => $o->shuffle())
+                        ->map(fn ($option) => $option->only('id', 'text'))
+                        ->values(),
+                ])->values(),
+        ];
     }
 
     /**

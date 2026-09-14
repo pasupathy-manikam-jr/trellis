@@ -5,13 +5,17 @@ use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\QuestionController;
+use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LessonCompletionController;
 use App\Http\Controllers\LessonVideoController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\QuizAttemptController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,6 +27,7 @@ Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses
 // Preview lessons are reachable by guests; the policy decides, not the route.
 Route::get('learn/{course}/{lesson}', [LearnController::class, 'lesson'])->name('learn.lesson');
 Route::get('lessons/{lesson}/video', [LessonVideoController::class, 'show'])->name('lessons.video');
+Route::get('verify/{serial}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -31,12 +36,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('learn/{course}', [LearnController::class, 'show'])->name('learn.show');
 
+    Route::post('lessons/{lesson}/quiz', [QuizAttemptController::class, 'store'])->name('lessons.quiz.attempt');
+    Route::get('certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');
+
     Route::post('lessons/{lesson}/complete', [LessonCompletionController::class, 'store'])->name('lessons.complete');
     Route::delete('lessons/{lesson}/complete', [LessonCompletionController::class, 'destroy'])->name('lessons.uncomplete');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('courses', AdminCourseController::class)->except('show');
+
+    Route::post('lessons/{lesson}/quiz', [QuizController::class, 'store'])->name('quizzes.store');
+    Route::patch('quizzes/{quiz}', [QuizController::class, 'update'])->name('quizzes.update');
+    Route::post('quizzes/{quiz}/questions', [QuestionController::class, 'store'])->name('questions.store');
+    Route::patch('questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
+    Route::patch('questions/{question}/move', [QuestionController::class, 'move'])->name('questions.move');
+    Route::delete('questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
 
     Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
     Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');

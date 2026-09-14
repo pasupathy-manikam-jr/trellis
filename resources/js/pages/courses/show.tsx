@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { type SharedData } from '@/types';
-import { Download, Eye, FileText, LoaderCircle, Play } from 'lucide-react';
+import { Download, Eye, FileText, LoaderCircle, Play, ListChecks } from 'lucide-react';
 
-const icons = { video: Play, text: FileText, download: Download };
+const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks };
 
 type Props = {
     course: Course;

@@ -64,9 +64,27 @@ class Enrollment extends Model
 
         if ($done && ! $this->completed_at) {
             $this->update(['completed_at' => now()]);
+            $this->issueCertificate();
         } elseif (! $done && $this->completed_at) {
+            // A certificate attests that the course *was* finished, so un-ticking a
+            // lesson reopens the course but does not take the certificate back.
             $this->update(['completed_at' => null]);
         }
+    }
+
+    public function issueCertificate(): Certificate
+    {
+        return Certificate::firstOrCreate(
+            ['user_id' => $this->user_id, 'course_id' => $this->course_id],
+            ['issued_at' => now()],
+        );
+    }
+
+    public function certificate(): ?Certificate
+    {
+        return Certificate::where('user_id', $this->user_id)
+            ->where('course_id', $this->course_id)
+            ->first();
     }
 
     public function hasExpired(): bool

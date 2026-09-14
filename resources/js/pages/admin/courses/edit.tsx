@@ -1,4 +1,5 @@
 import { Flash } from '@/components/flash';
+import { QuizDialog } from '@/components/quiz-builder';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,10 +18,10 @@ import AppLayout from '@/layouts/app-layout';
 import { duration } from '@/lib/format';
 import { type BreadcrumbItem, type Course, type Lesson, type LessonType, type Section } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Eye, ExternalLink, LoaderCircle, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, ExternalLink, ListChecks, LoaderCircle, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-const LESSON_TYPES: LessonType[] = ['text', 'video', 'download'];
+const LESSON_TYPES: LessonType[] = ['text', 'video', 'download', 'quiz'];
 
 type AdminEnrollment = {
     id: number;
@@ -188,6 +189,7 @@ function Curriculum({ course }: { course: Course }) {
 function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: boolean; isLast: boolean }) {
     const [title, setTitle] = useState(section.title);
     const [editing, setEditing] = useState<Lesson | 'new' | null>(null);
+    const [quizFor, setQuizFor] = useState<Lesson | null>(null);
 
     return (
         <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-lg border">
@@ -228,6 +230,18 @@ function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: 
                                 <Eye className="size-3" /> preview
                             </Badge>
                         )}
+                        {lesson.type === 'quiz' && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="shrink-0"
+                                onClick={() => setQuizFor(lesson)}
+                            >
+                                <ListChecks className="size-4" />
+                                {lesson.quiz ? `${lesson.quiz.questions.length} Q` : 'Set up'}
+                            </Button>
+                        )}
                         <Move
                             type="lessons"
                             id={lesson.id}
@@ -244,6 +258,8 @@ function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: 
                     <Plus className="size-4" /> Add lesson
                 </Button>
             </div>
+
+            {quizFor && <QuizDialog lesson={quizFor} onClose={() => setQuizFor(null)} />}
 
             {editing && (
                 <LessonDialog

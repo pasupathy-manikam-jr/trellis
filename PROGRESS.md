@@ -2,7 +2,7 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 3 ✅ complete. Next: Phase 4 — quizzes + certificates.
+**Now:** Phase 4 ✅ complete. Next: Phase 5 — drip + polish.
 
 ---
 
@@ -51,13 +51,14 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 - [x] ✅ *Done when:* visitor enrols end to end — **verified live: $49.00 → HALFOFF → $24.50**
 
 ## Phase 4 — Quizzes + certificates
-- [ ] Migrations: quizzes, questions, options, quiz_attempts, attempt_answers
-- [ ] React quiz builder
-- [ ] Attempt flow + grading + attempt limits
-- [ ] Certificates table + PDF
-- [ ] Public verify `/verify/{serial}`
-- [ ] Test: scoring + pass threshold + max attempts
-- [ ] ✅ *Done when:* completion yields a verifiable cert
+- [x] Migrations: quizzes, questions, options, quiz_attempts, attempt_answers, certificates
+- [x] React quiz builder (settings + questions + options, reorder, validation)
+- [x] Attempt flow + grading + attempt limits + pass threshold
+- [x] Certificates issued on course completion; PDF via dompdf
+- [x] Public verify `/verify/{serial}`
+- [x] Test: scoring, weighting, exact-match multi, tampering, limits, issuance
+- [x] 115 tests (26 new). Pint + tsc clean.
+- [x] ✅ *Done when:* completion yields a verifiable cert
 
 ## Phase 5 — Drip + polish
 - [ ] `drip_days` unlock (computed on read)
@@ -68,6 +69,32 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### 2026-09-14 — Phase 4 done
+Quizzes, grading, certificates.
+
+**Grading rules, each asserted:**
+- Exact match only — a multi-select scores nothing unless the chosen set equals the correct
+  set, so ticking every box scores zero rather than everything.
+- Weighted by points, not question count.
+- Option ids are intersected with the question's own options before comparing, so a forged
+  or borrowed id cannot turn a wrong answer right. There is a test that smuggles another
+  question's correct id and expects zero.
+- Unanswered is wrong, not skipped. Duplicate ids count once. Pass threshold is inclusive.
+
+**The integration that makes completion mean something.** `LessonPolicy@complete` refuses a
+quiz lesson outright — a quiz completes only by being passed. Without that, "finished the
+course" would just mean "clicked ten buttons". Passing writes the completion, which may
+finish the course, which issues the certificate. One chain, one place.
+
+**The answer key never ships.** `is_correct` is stripped from the player payload; the test
+asserts the rendered page does not contain the string at all.
+
+**True/false was cut.** It is a single-choice question with two options — one less branch in
+grading and in the builder.
+
+**A certificate is not revoked** by un-ticking a lesson. It attests that the course *was*
+completed; the enrolment reopens, the attestation stands.
 
 ### 2026-09-14 — Phase 3 done
 Orders, coupons, refunds. Still no gateway.

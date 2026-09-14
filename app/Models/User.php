@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
     public function completions(): HasMany
     {
         return $this->hasMany(LessonCompletion::class);
