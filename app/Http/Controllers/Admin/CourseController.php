@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,7 +44,10 @@ class CourseController extends Controller
     public function edit(Course $course): Response
     {
         return Inertia::render('admin/courses/edit', [
-            'course' => $course->load(['sections.lessons.quiz.questions.options']),
+            'course' => [
+                ...$course->load(['sections.lessons.quiz.questions.options'])->toArray(),
+                'thumbnail_url' => $course->thumbnailUrl(),
+            ],
             'enrollments' => $course->enrollments()
                 ->with('user:id,name,email')
                 ->latest()
@@ -66,6 +70,7 @@ class CourseController extends Controller
         }
 
         $course->update($data);
+        $this->storeThumbnail($request, $course);
 
         return back()->with('success', 'Course saved.');
     }
@@ -77,10 +82,28 @@ class CourseController extends Controller
         return to_route('admin.courses.index')->with('success', 'Course deleted.');
     }
 
+    /** Thumbnails are public: they are the marketing image, not gated content. */
+    private function storeThumbnail(Request $request, Course $course): void
+    {
+        if (! $request->hasFile('thumbnail')) {
+            return;
+        }
+
+        $previous = $course->thumbnail_path;
+
+        $course->update([
+            'thumbnail_path' => $request->file('thumbnail')->store('thumbnails', 'public'),
+        ]);
+
+        if ($previous) {
+            Storage::disk('public')->delete($previous);
+        }
+    }
+
     /** @return array<string, mixed> */
     private function validated(Request $request, ?Course $course = null): array
     {
-        return $request->validate([
+        return collect($request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable', 'string', 'max:255', 'alpha_dash',
@@ -90,6 +113,7 @@ class CourseController extends Controller
             'description' => ['nullable', 'string'],
             'price_cents' => ['required', 'integer', 'min:0'],
             'status' => ['required', Rule::enum(CourseStatus::class)],
-        ]);
+            'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        ]))->except('thumbnail')->all();
     }
 }

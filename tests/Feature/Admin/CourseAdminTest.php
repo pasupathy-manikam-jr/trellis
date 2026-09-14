@@ -6,6 +6,8 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Section;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->admin = User::factory()->create(['role' => UserRole::Admin]);
@@ -156,4 +158,51 @@ test('every admin write route rejects a student', function () {
     foreach ($routes as [$method, $url]) {
         $this->actingAs($student)->call($method, $url)->assertForbidden("{$method} {$url}");
     }
+});
+
+test('a cover image is stored on the public disk and replaces the previous one', function () {
+    Storage::fake('public');
+    $course = Course::factory()->create();
+
+    $payload = fn ($file) => [
+        '_method' => 'patch',
+        'title' => $course->title,
+        'price_cents' => 0,
+        'status' => 'draft',
+        'thumbnail' => $file,
+    ];
+
+    $this->actingAs($this->admin)
+        ->post("/admin/courses/{$course->slug}", $payload(
+            UploadedFile::fake()->image('one.jpg')
+        ))
+        ->assertRedirect()->assertSessionHasNoErrors();
+
+    $first = $course->fresh()->thumbnail_path;
+
+    expect($first)->toStartWith('thumbnails/')
+        ->and(Storage::disk('public')->exists($first))->toBeTrue();
+
+    $this->actingAs($this->admin)
+        ->post("/admin/courses/{$course->slug}", $payload(
+            UploadedFile::fake()->image('two.jpg')
+        ))
+        ->assertRedirect();
+
+    expect(Storage::disk('public')->exists($first))->toBeFalse()
+        ->and(Storage::disk('public')->exists($course->fresh()->thumbnail_path))->toBeTrue();
+});
+
+test('a non-image upload is refused', function () {
+    $course = Course::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->post("/admin/courses/{$course->slug}", [
+            '_method' => 'patch',
+            'title' => $course->title,
+            'price_cents' => 0,
+            'status' => 'draft',
+            'thumbnail' => UploadedFile::fake()->create('notes.pdf', 20, 'application/pdf'),
+        ])
+        ->assertSessionHasErrors('thumbnail');
 });

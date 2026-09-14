@@ -129,6 +129,21 @@ export interface Progress {
     percent: number;
 }
 
+/** What a course card needs, wherever it appears. */
+export interface CourseCardData {
+    id: number;
+    slug: string;
+    title: string;
+    summary: string | null;
+    price_cents: number;
+    currency: string;
+    thumbnail_url: string | null;
+    lessons_count: number;
+    instructor: string | null;
+    rating: number | null;
+    reviews_count: number;
+}
+
 export interface Course {
     id: number;
     instructor_id: number;
@@ -140,6 +155,7 @@ export interface Course {
     currency: string;
     status: CourseStatus;
     published_at: string | null;
+    thumbnail_url?: string | null;
     sections?: Section[];
     sections_count?: number;
     lessons_count?: number;

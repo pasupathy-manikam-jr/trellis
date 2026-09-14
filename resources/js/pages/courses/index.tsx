@@ -1,41 +1,30 @@
-import { Badge } from '@/components/ui/badge';
+import { CourseCard } from '@/components/course-card';
 import PublicLayout from '@/layouts/public-layout';
-import { money } from '@/lib/format';
-import { type Course } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { type CourseCardData } from '@/types';
+import { Head } from '@inertiajs/react';
 
-export default function CourseCatalog({ courses }: { courses: Course[] }) {
+export default function CourseCatalog({ courses }: { courses: CourseCardData[] }) {
     return (
         <PublicLayout>
             <Head title="Courses" />
 
-            <h1 className="mb-6 text-2xl font-semibold">Courses</h1>
+            <div className="mb-10">
+                <span className="text-primary text-xs font-semibold tracking-widest uppercase">Catalogue</span>
+                <h1 className="mt-2 text-3xl font-bold tracking-tight">Courses</h1>
+                <div className="bg-primary mt-4 h-1 w-16 rounded-full" />
+                <p className="text-muted-foreground mt-4 text-sm">
+                    {courses.length} course{courses.length === 1 ? '' : 's'} available.
+                </p>
+            </div>
 
             {courses.length === 0 ? (
-                <p className="text-muted-foreground rounded-xl border border-dashed p-12 text-center text-sm">
+                <p className="text-muted-foreground rounded-xl border border-dashed p-16 text-center text-sm">
                     No published courses yet.
                 </p>
             ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {courses.map((course) => (
-                        <Link
-                            key={course.id}
-                            href={`/courses/${course.slug}`}
-                            className="hover:border-foreground/20 flex flex-col gap-2 rounded-xl border p-4 transition-colors"
-                        >
-                            <h2 className="font-medium">{course.title}</h2>
-                            {course.summary && (
-                                <p className="text-muted-foreground line-clamp-3 text-sm">{course.summary}</p>
-                            )}
-                            <div className="mt-auto flex items-center gap-2 pt-2">
-                                <Badge variant={course.price_cents === 0 ? 'secondary' : 'default'}>
-                                    {money(course.price_cents, course.currency)}
-                                </Badge>
-                                <span className="text-muted-foreground text-xs">
-                                    {course.lessons_count} lesson{course.lessons_count === 1 ? '' : 's'}
-                                </span>
-                            </div>
-                        </Link>
+                        <CourseCard key={course.id} course={course} />
                     ))}
                 </div>
             )}

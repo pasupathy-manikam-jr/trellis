@@ -1,57 +1,65 @@
 import AppLogoIcon from '@/components/app-logo-icon';
-import { Badge } from '@/components/ui/badge';
+import { CourseCard } from '@/components/course-card';
 import { Button } from '@/components/ui/button';
-import { money } from '@/lib/format';
-import { type Course, type SharedData } from '@/types';
+import { type CourseCardData, type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Award, ListChecks, PlayCircle, ShieldCheck } from 'lucide-react';
+import { Award, GraduationCap, ListChecks, PlayCircle, Users } from 'lucide-react';
+
+type Props = {
+    courses: CourseCardData[];
+    hero_image: string | null;
+    stats: { courses: number; lessons: number; learners: number };
+};
 
 const features = [
     {
         icon: PlayCircle,
         title: 'Lessons that stay yours',
-        body: 'Video is served from private storage behind an access check, never a public URL anyone can pass around.',
+        body: 'Video is served from private storage behind an access check — never a public URL that can be passed around.',
     },
     {
         icon: ListChecks,
         title: 'Quizzes that mean something',
-        body: 'A quiz lesson completes only by being passed — so finishing a course is a claim that holds up.',
+        body: 'A quiz lesson completes only by being passed, so finishing a course is a claim that holds up.',
     },
     {
         icon: Award,
         title: 'Certificates you can check',
-        body: 'Every certificate carries a serial anyone can verify, without an account.',
+        body: 'Every certificate carries a serial anyone can verify, with no account needed.',
     },
 ];
 
-export default function Welcome({ courses }: { courses: Course[] }) {
+export default function Welcome({ courses, hero_image, stats }: Props) {
     const { auth } = usePage<SharedData>().props;
 
     return (
         <>
             <Head title="Learn something properly">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+                <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
             </Head>
 
             <div className="bg-background text-foreground flex min-h-screen flex-col">
-                <header className="border-b">
-                    <nav className="mx-auto flex w-full max-w-5xl items-center gap-4 px-6 py-4">
-                        <Link href="/" className="flex items-center gap-2 font-semibold">
-                            <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-md">
+                <header className="absolute inset-x-0 top-0 z-10">
+                    <nav className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-5">
+                        <Link href="/" className="flex items-center gap-2 font-semibold text-white">
+                            <span className="bg-primary flex size-8 items-center justify-center rounded-md text-white">
                                 <AppLogoIcon className="size-4" />
                             </span>
                             Trellis
                         </Link>
 
                         <div className="ml-auto flex items-center gap-2">
+                            <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/15 hover:text-white">
+                                <Link href="/courses">Courses</Link>
+                            </Button>
                             {auth.user ? (
                                 <Button asChild size="sm">
                                     <Link href="/dashboard">Dashboard</Link>
                                 </Button>
                             ) : (
                                 <>
-                                    <Button asChild variant="ghost" size="sm">
+                                    <Button asChild variant="ghost" size="sm" className="text-white hover:bg-white/15 hover:text-white">
                                         <Link href="/login">Log in</Link>
                                     </Button>
                                     <Button asChild size="sm">
@@ -64,90 +72,140 @@ export default function Welcome({ courses }: { courses: Course[] }) {
                 </header>
 
                 <main className="flex-1">
-                    <section className="mx-auto w-full max-w-5xl px-6 py-20 text-center">
-                        <Badge variant="secondary" className="mb-6">
-                            <ShieldCheck className="size-3.5" /> Built for people who sell courses
-                        </Badge>
-
-                        <h1 className="mx-auto max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-                            A structure worth climbing.
-                        </h1>
-
-                        <p className="text-muted-foreground mx-auto mt-5 max-w-xl text-lg text-pretty">
-                            Trellis gives a course the shape it needs — sections, lessons, quizzes,
-                            certificates — and gets out of the way of the teaching.
-                        </p>
-
-                        <div className="mt-8 flex flex-wrap justify-center gap-3">
-                            <Button asChild size="lg">
-                                <Link href="/courses">Browse courses</Link>
-                            </Button>
-                            {!auth.user && (
-                                <Button asChild size="lg" variant="outline">
-                                    <Link href="/register">Create an account</Link>
-                                </Button>
+                    {/* Hero — the photograph is a real course thumbnail when one exists. */}
+                    <section className="relative isolate overflow-hidden">
+                        <div className="absolute inset-0 -z-10">
+                            {hero_image ? (
+                                <img src={hero_image} alt="" className="size-full object-cover" />
+                            ) : (
+                                <div className="size-full bg-[linear-gradient(135deg,hsl(163_56%_14%),hsl(178_48%_26%))]" />
                             )}
+                            <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-black/55" />
+                        </div>
+
+                        <div className="mx-auto w-full max-w-6xl px-6 py-32 sm:py-40">
+                            <div className="max-w-2xl text-white">
+                                <span className="bg-primary/25 ring-primary/40 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ring-1">
+                                    <GraduationCap className="size-3.5" /> Courses, quizzes and certificates
+                                </span>
+
+                                <h1 className="mt-6 text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+                                    Learn something properly.
+                                </h1>
+
+                                <div className="bg-primary mt-6 h-1 w-20 rounded-full" />
+
+                                <p className="mt-6 max-w-xl text-lg text-pretty text-white/80">
+                                    Structured courses with real assessment at the end — not a folder of videos.
+                                    Work through it at your pace and leave with something you can show.
+                                </p>
+
+                                <div className="mt-8 flex flex-wrap gap-3">
+                                    <Button asChild size="lg">
+                                        <Link href="/courses">Browse courses</Link>
+                                    </Button>
+                                    <Button
+                                        asChild
+                                        size="lg"
+                                        variant="outline"
+                                        className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+                                    >
+                                        <Link href="#how">How it works</Link>
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
-                    {courses.length > 0 && (
-                        <section className="mx-auto w-full max-w-5xl px-6 pb-20">
-                            <div className="mb-6 flex items-end justify-between gap-4">
-                                <h2 className="text-xl font-semibold">Available now</h2>
-                                <Link href="/courses" className="text-muted-foreground text-sm hover:underline">
-                                    See all →
-                                </Link>
-                            </div>
-
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {courses.map((course) => (
-                                    <Link
-                                        key={course.id}
-                                        href={`/courses/${course.slug}`}
-                                        className="hover:border-foreground/20 flex flex-col gap-2 rounded-xl border p-5 transition-colors"
-                                    >
-                                        <h3 className="font-medium">{course.title}</h3>
-                                        {course.summary && (
-                                            <p className="text-muted-foreground line-clamp-3 text-sm">
-                                                {course.summary}
-                                            </p>
-                                        )}
-                                        <div className="mt-auto flex items-center gap-2 pt-3">
-                                            <Badge variant={course.price_cents === 0 ? 'secondary' : 'default'}>
-                                                {money(course.price_cents, course.currency)}
-                                            </Badge>
-                                            <span className="text-muted-foreground text-xs">
-                                                {course.lessons_count} lesson
-                                                {course.lessons_count === 1 ? '' : 's'}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    <section className="border-t">
-                        <div className="mx-auto grid w-full max-w-5xl gap-10 px-6 py-16 sm:grid-cols-3">
-                            {features.map(({ icon: Icon, title, body }) => (
-                                <div key={title}>
-                                    <span className="bg-accent text-accent-foreground mb-4 flex size-9 items-center justify-center rounded-lg">
-                                        <Icon className="size-5" />
-                                    </span>
-                                    <h3 className="mb-1.5 font-medium">{title}</h3>
-                                    <p className="text-muted-foreground text-sm leading-relaxed">{body}</p>
+                    {/* Stats band */}
+                    <section className="bg-primary text-primary-foreground">
+                        <div className="mx-auto grid w-full max-w-6xl grid-cols-3 divide-x divide-white/15 px-6">
+                            {[
+                                { label: 'Courses', value: stats.courses, icon: GraduationCap },
+                                { label: 'Lessons', value: stats.lessons, icon: PlayCircle },
+                                { label: 'Learners', value: stats.learners, icon: Users },
+                            ].map(({ label, value, icon: Icon }) => (
+                                <div key={label} className="flex items-center justify-center gap-3 py-6 sm:py-8">
+                                    <Icon className="size-6 opacity-70" />
+                                    <div>
+                                        <div className="text-2xl font-bold tabular-nums sm:text-3xl">{value}</div>
+                                        <div className="text-xs opacity-80">{label}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </section>
+
+                    {/* Course grid */}
+                    {courses.length > 0 && (
+                        <section className="mx-auto w-full max-w-6xl px-6 py-20">
+                            <div className="mb-10 text-center">
+                                <span className="text-primary text-xs font-semibold tracking-widest uppercase">
+                                    Available now
+                                </span>
+                                <h2 className="mt-2 text-3xl font-bold tracking-tight">Popular courses</h2>
+                                <div className="bg-primary mx-auto mt-4 h-1 w-16 rounded-full" />
+                            </div>
+
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                {courses.map((course) => (
+                                    <CourseCard key={course.id} course={course} />
+                                ))}
+                            </div>
+
+                            <div className="mt-10 text-center">
+                                <Button asChild variant="outline" size="lg">
+                                    <Link href="/courses">See all courses</Link>
+                                </Button>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Why us */}
+                    <section id="how" className="bg-muted/40 border-y">
+                        <div className="mx-auto w-full max-w-6xl px-6 py-20">
+                            <div className="mb-12 text-center">
+                                <span className="text-primary text-xs font-semibold tracking-widest uppercase">
+                                    How it works
+                                </span>
+                                <h2 className="mt-2 text-3xl font-bold tracking-tight">Built to be finished</h2>
+                                <div className="bg-primary mx-auto mt-4 h-1 w-16 rounded-full" />
+                            </div>
+
+                            <div className="grid gap-8 sm:grid-cols-3">
+                                {features.map(({ icon: Icon, title, body }) => (
+                                    <div key={title} className="bg-card rounded-xl border p-6 text-center">
+                                        <span className="bg-primary text-primary-foreground mx-auto mb-4 flex size-12 items-center justify-center rounded-xl">
+                                            <Icon className="size-6" />
+                                        </span>
+                                        <h3 className="mb-2 font-semibold">{title}</h3>
+                                        <p className="text-muted-foreground text-sm leading-relaxed">{body}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* CTA */}
+                    <section className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
+                        <h2 className="text-3xl font-bold tracking-tight text-balance">
+                            Start with a free preview.
+                        </h2>
+                        <p className="text-muted-foreground mx-auto mt-3 max-w-lg">
+                            Every course opens a lesson or two to everyone. Read one before you decide.
+                        </p>
+                        <Button asChild size="lg" className="mt-6">
+                            <Link href="/courses">Browse courses</Link>
+                        </Button>
+                    </section>
                 </main>
 
-                <footer className="border-t">
-                    <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-6 text-sm">
-                        <span className="flex items-center gap-2 font-medium">
+                <footer className="bg-muted/40 border-t">
+                    <div className="text-muted-foreground mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-8 text-sm">
+                        <span className="text-foreground flex items-center gap-2 font-semibold">
                             <AppLogoIcon className="size-4" /> Trellis
                         </span>
-                        <Link href="/courses" className="hover:underline">
+                        <Link href="/courses" className="hover:text-foreground">
                             Courses
                         </Link>
                         <span className="ml-auto text-xs">Verify a certificate at /verify/&lt;serial&gt;</span>

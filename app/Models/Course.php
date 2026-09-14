@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
@@ -87,6 +88,12 @@ class Course extends Model
     public function scopePublished(Builder $query): void
     {
         $query->where('status', CourseStatus::Published);
+    }
+
+    /** Thumbnails are marketing images — public disk, unlike lesson video. */
+    public function thumbnailUrl(): ?string
+    {
+        return $this->thumbnail_path ? Storage::disk('public')->url($this->thumbnail_path) : null;
     }
 
     public function isFree(): bool

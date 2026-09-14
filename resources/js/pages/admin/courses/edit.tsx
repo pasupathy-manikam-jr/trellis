@@ -60,20 +60,32 @@ export default function CourseEdit({
 }
 
 function Details({ course }: { course: Course }) {
-    const { data, setData, patch, processing, errors, isDirty } = useForm({
+    const { data, setData, post, processing, errors, isDirty } = useForm<{
+        title: string;
+        slug: string;
+        summary: string;
+        description: string;
+        price_cents: number;
+        status: Course['status'];
+        thumbnail: File | null;
+        _method: string;
+    }>({
         title: course.title,
         slug: course.slug,
         summary: course.summary ?? '',
         description: course.description ?? '',
         price_cents: course.price_cents,
         status: course.status,
+        thumbnail: null,
+        // A multipart body can only be POSTed, so the update spoofs PATCH.
+        _method: 'patch',
     });
 
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
-                patch(`/admin/courses/${course.slug}`);
+                post(`/admin/courses/${course.slug}`, { forceFormData: true });
             }}
             className="border-sidebar-border/70 dark:border-sidebar-border flex flex-col gap-4 rounded-xl border p-4"
         >
@@ -100,6 +112,27 @@ function Details({ course }: { course: Course }) {
 
             <Field label="Summary" error={errors.summary}>
                 <Input value={data.summary} onChange={(e) => setData('summary', e.target.value)} />
+            </Field>
+
+            <Field label="Cover image" error={errors.thumbnail}>
+                <div className="flex items-center gap-3">
+                    {course.thumbnail_url && (
+                        <img
+                            src={course.thumbnail_url}
+                            alt=""
+                            className="h-16 w-24 shrink-0 rounded-md border object-cover"
+                        />
+                    )}
+                    <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => setData('thumbnail', e.target.files?.[0] ?? null)}
+                    />
+                </div>
+                <p className="text-muted-foreground text-xs">
+                    Shown on the catalogue and behind the course header. Public — it is the
+                    marketing image, not gated content. Max 4 MB.
+                </p>
             </Field>
 
             <Field label="Description" error={errors.description}>
@@ -133,7 +166,7 @@ function Details({ course }: { course: Course }) {
                 </Field>
             </div>
 
-            <Button type="submit" disabled={processing || !isDirty} className="w-fit">
+            <Button type="submit" disabled={processing || (!isDirty && !data.thumbnail)} className="w-fit">
                 {processing && <LoaderCircle className="size-4 animate-spin" />}
                 Save details
             </Button>

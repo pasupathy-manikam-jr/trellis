@@ -1,3 +1,4 @@
+import { CourseThumb } from '@/components/course-card';
 import { Reviews, Stars, type ReviewSummary } from '@/components/reviews';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,12 +41,22 @@ export default function CourseShow({
                 <Link href="/courses">← All courses</Link>
             </Button>
 
-            <div className="grid gap-8 lg:grid-cols-3">
-                <div className="lg:col-span-2">
-                    <h1 className="text-2xl font-semibold">{course.title}</h1>
-                    {course.summary && <p className="text-muted-foreground mt-2">{course.summary}</p>}
-                    <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <div className="relative mb-8 isolate overflow-hidden rounded-2xl">
+                <div className="absolute inset-0 -z-10">
+                    <CourseThumb course={{ id: course.id, title: course.title, thumbnail_url: course.thumbnail_url ?? null }} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/40" />
+                </div>
+
+                <div className="px-6 py-12 text-white sm:px-10 sm:py-16">
+                    <h1 className="max-w-2xl text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+                        {course.title}
+                    </h1>
+                    {course.summary && (
+                        <p className="mt-3 max-w-xl text-white/80">{course.summary}</p>
+                    )}
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/80">
                         {course.instructor && <span>By {course.instructor.name}</span>}
+                        <span>{lessonCount} lessons</span>
                         {reviews.average !== null && (
                             <span className="flex items-center gap-1.5">
                                 <Stars rating={Math.round(reviews.average)} className="size-3.5" />
@@ -53,9 +64,13 @@ export default function CourseShow({
                             </span>
                         )}
                     </div>
+                </div>
+            </div>
 
+            <div className="grid gap-8 lg:grid-cols-3">
+                <div className="lg:col-span-2">
                     {course.description && (
-                        <div className="mt-6 text-sm leading-relaxed whitespace-pre-wrap">{course.description}</div>
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">{course.description}</div>
                     )}
 
                     <h2 className="mt-8 font-semibold">
