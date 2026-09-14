@@ -13,6 +13,8 @@ class QuizController extends Controller
 {
     public function store(Lesson $lesson): RedirectResponse
     {
+        $this->authorize('manage', $lesson->course());
+
         abort_unless($lesson->type === LessonType::Quiz, 422, 'That lesson is not a quiz.');
 
         $lesson->quiz()->firstOrCreate([], ['pass_percent' => 70]);
@@ -22,6 +24,8 @@ class QuizController extends Controller
 
     public function update(Request $request, Quiz $quiz): RedirectResponse
     {
+        $this->authorize('manage', $quiz->course());
+
         $quiz->update($request->validate([
             'pass_percent' => ['required', 'integer', 'min:1', 'max:100'],
             'max_attempts' => ['nullable', 'integer', 'min:1', 'max:255'],

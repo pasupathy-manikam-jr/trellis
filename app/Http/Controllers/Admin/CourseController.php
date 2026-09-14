@@ -15,10 +15,13 @@ use Inertia\Response;
 
 class CourseController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         return Inertia::render('admin/courses/index', [
             'courses' => Course::query()
+                // An instructor's workspace is their own courses, nobody else's.
+                ->unless($request->user()->isAdmin(),
+                    fn ($q) => $q->where('instructor_id', $request->user()->id))
                 ->withCount('sections')
                 ->with('instructor:id,name')
                 ->latest()
@@ -28,11 +31,15 @@ class CourseController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Course::class);
+
         return Inertia::render('admin/courses/create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Course::class);
+
         $course = Course::create([
             ...$this->validated($request),
             'instructor_id' => $request->user()->id,
@@ -44,6 +51,8 @@ class CourseController extends Controller
 
     public function edit(Course $course): Response
     {
+        $this->authorize('manage', $course);
+
         return Inertia::render('admin/courses/edit', [
             'course' => [
                 ...$course->load(['sections.lessons.quiz.questions.options', 'categories:id'])->toArray(),
@@ -66,6 +75,8 @@ class CourseController extends Controller
 
     public function update(Request $request, Course $course): RedirectResponse
     {
+        $this->authorize('manage', $course);
+
         $data = $this->validated($request, $course);
 
         // Stamp the first publish; keep the original date on re-publish.
@@ -85,6 +96,8 @@ class CourseController extends Controller
 
     public function destroy(Course $course): RedirectResponse
     {
+        $this->authorize('manage', $course);
+
         $course->delete();
 
         return to_route('admin.courses.index')->with('success', 'Course deleted.');

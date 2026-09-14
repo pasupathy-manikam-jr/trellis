@@ -15,6 +15,8 @@ class EnrollmentController extends Controller
 {
     public function store(Request $request, Course $course): RedirectResponse
     {
+        $this->authorize('manage', $course);
+
         $email = $request->validate([
             'email' => ['required', 'email', 'exists:users,email'],
         ])['email'];
@@ -38,6 +40,8 @@ class EnrollmentController extends Controller
 
     public function destroy(Enrollment $enrollment): RedirectResponse
     {
+        $this->authorize('manage', $enrollment->course);
+
         $enrollment->delete();
 
         return back()->with('success', 'Enrolment revoked.');

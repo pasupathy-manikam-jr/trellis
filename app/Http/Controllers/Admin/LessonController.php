@@ -15,6 +15,8 @@ class LessonController extends Controller
 {
     public function store(Request $request, Section $section): RedirectResponse
     {
+        $this->authorize('manage', $section->course);
+
         $lesson = $section->lessons()->create($this->validated($request));
         $this->storeVideo($request, $lesson);
 
@@ -23,6 +25,8 @@ class LessonController extends Controller
 
     public function update(Request $request, Lesson $lesson): RedirectResponse
     {
+        $this->authorize('manage', $lesson->course());
+
         $lesson->update($this->validated($request, $lesson));
         $this->storeVideo($request, $lesson);
 
@@ -49,6 +53,8 @@ class LessonController extends Controller
 
     public function move(Request $request, Lesson $lesson): RedirectResponse
     {
+        $this->authorize('manage', $lesson->course());
+
         $lesson->move($request->validate([
             'direction' => ['required', Rule::in(['up', 'down'])],
         ])['direction']);
@@ -58,6 +64,8 @@ class LessonController extends Controller
 
     public function destroy(Lesson $lesson): RedirectResponse
     {
+        $this->authorize('manage', $lesson->course());
+
         $lesson->delete();
 
         return back()->with('success', 'Lesson deleted.');

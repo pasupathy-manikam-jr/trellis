@@ -28,6 +28,11 @@ class Question extends Model
         return $this->belongsTo(Quiz::class);
     }
 
+    public function course(): Course
+    {
+        return $this->quiz->course();
+    }
+
     public function options(): HasMany
     {
         return $this->hasMany(Option::class)->orderBy('position');

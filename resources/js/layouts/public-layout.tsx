@@ -20,7 +20,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     <div className="ml-auto flex items-center gap-2">
                         {auth.user ? (
                             <>
-                                {auth.user.role === 'admin' && (
+                                {(auth.user.role === 'admin' || auth.user.role === 'instructor') && (
                                     <Button asChild variant="ghost" size="sm">
                                         <Link href="/admin/courses">Admin</Link>
                                     </Button>

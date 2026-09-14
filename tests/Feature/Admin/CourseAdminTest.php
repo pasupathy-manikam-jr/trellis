@@ -13,7 +13,9 @@ beforeEach(function () {
     $this->admin = User::factory()->create(['role' => UserRole::Admin]);
 });
 
-test('the admin area is closed to guests, students and instructors', function (?string $role, string $expect) {
+// Instructors reach the workspace now — scoped to their own courses, which
+// InstructorRoleTest covers. Only guests and students are shut out here.
+test('the workspace is closed to guests and students', function (?string $role, string $expect) {
     $request = $role
         ? $this->actingAs(User::factory()->create(['role' => UserRole::from($role)]))
         : $this;
@@ -26,7 +28,6 @@ test('the admin area is closed to guests, students and instructors', function (?
 })->with([
     'guest' => [null, 'redirect'],
     'student' => ['student', 'forbidden'],
-    'instructor' => ['instructor', 'forbidden'],
 ]);
 
 test('an admin creates a course and is sent to the editor', function () {

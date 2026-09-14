@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
@@ -53,29 +54,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('lessons/{lesson}/complete', [LessonCompletionController::class, 'destroy'])->name('lessons.uncomplete');
 });
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+// Admins and instructors share the course workspace; CoursePolicy@manage keeps
+// each instructor inside their own courses.
+Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('courses', AdminCourseController::class)->except('show');
 
-    Route::post('lessons/{lesson}/quiz', [QuizController::class, 'store'])->name('quizzes.store');
-    Route::patch('quizzes/{quiz}', [QuizController::class, 'update'])->name('quizzes.update');
-    Route::post('quizzes/{quiz}/questions', [QuestionController::class, 'store'])->name('questions.store');
-    Route::patch('questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
-    Route::patch('questions/{question}/move', [QuestionController::class, 'move'])->name('questions.move');
-    Route::delete('questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
-
     Route::get('insights', InsightsController::class)->name('insights');
-
-    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
-    Route::patch('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
-    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-
-    Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
-    Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');
-    Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
-
-    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 
     Route::post('courses/{course}/enrollments', [AdminEnrollmentController::class, 'store'])->name('enrollments.store');
     Route::delete('enrollments/{enrollment}', [AdminEnrollmentController::class, 'destroy'])->name('enrollments.destroy');
@@ -89,6 +73,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
     Route::patch('lessons/{lesson}/move', [LessonController::class, 'move'])->name('lessons.move');
     Route::delete('lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
+
+    Route::post('lessons/{lesson}/quiz', [QuizController::class, 'store'])->name('quizzes.store');
+    Route::patch('quizzes/{quiz}', [QuizController::class, 'update'])->name('quizzes.update');
+    Route::post('quizzes/{quiz}/questions', [QuestionController::class, 'store'])->name('questions.store');
+    Route::patch('questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
+    Route::patch('questions/{question}/move', [QuestionController::class, 'move'])->name('questions.move');
+    Route::delete('questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+});
+
+// Money, taxonomy and people stay with admins.
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
+
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::patch('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
+    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
+    Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');
+    Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
+
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 });
 
 require __DIR__.'/settings.php';

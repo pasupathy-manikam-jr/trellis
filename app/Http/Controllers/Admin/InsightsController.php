@@ -6,16 +6,20 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InsightsController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(Request $request): Response
     {
         // Aggregates as subqueries rather than loading rows — one trip, and it
         // does not get slower as enrolments grow.
         $courses = Course::query()
+            // Instructors see their own numbers only.
+            ->unless($request->user()->isAdmin(),
+                fn (Builder $q) => $q->where('instructor_id', $request->user()->id))
             ->withCount([
                 'enrollments',
                 'enrollments as completed_count' => fn (Builder $q) => $q->whereNotNull('completed_at'),

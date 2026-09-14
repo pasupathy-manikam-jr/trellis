@@ -16,6 +16,8 @@ class QuestionController extends Controller
 {
     public function store(Request $request, Quiz $quiz): RedirectResponse
     {
+        $this->authorize('manage', $quiz->course());
+
         $data = $this->validated($request);
 
         DB::transaction(function () use ($quiz, $data) {
@@ -33,6 +35,8 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question): RedirectResponse
     {
+        $this->authorize('manage', $question->course());
+
         $data = $this->validated($request);
 
         DB::transaction(function () use ($question, $data) {
@@ -50,6 +54,8 @@ class QuestionController extends Controller
 
     public function move(Request $request, Question $question): RedirectResponse
     {
+        $this->authorize('manage', $question->course());
+
         $question->move($request->validate([
             'direction' => ['required', Rule::in(['up', 'down'])],
         ])['direction']);
@@ -59,6 +65,8 @@ class QuestionController extends Controller
 
     public function destroy(Question $question): RedirectResponse
     {
+        $this->authorize('manage', $question->course());
+
         $question->delete();
 
         return back()->with('success', 'Question deleted.');

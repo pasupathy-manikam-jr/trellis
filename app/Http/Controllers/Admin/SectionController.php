@@ -13,6 +13,8 @@ class SectionController extends Controller
 {
     public function store(Request $request, Course $course): RedirectResponse
     {
+        $this->authorize('manage', $course);
+
         $course->sections()->create(
             $request->validate(['title' => ['required', 'string', 'max:255']])
         );
@@ -22,6 +24,8 @@ class SectionController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
+        $this->authorize('manage', $section->course);
+
         $section->update(
             $request->validate(['title' => ['required', 'string', 'max:255']])
         );
@@ -31,6 +35,8 @@ class SectionController extends Controller
 
     public function move(Request $request, Section $section): RedirectResponse
     {
+        $this->authorize('manage', $section->course);
+
         $section->move($request->validate([
             'direction' => ['required', Rule::in(['up', 'down'])],
         ])['direction']);
@@ -40,6 +46,8 @@ class SectionController extends Controller
 
     public function destroy(Section $section): RedirectResponse
     {
+        $this->authorize('manage', $section->course);
+
         $section->delete();
 
         return back()->with('success', 'Section deleted.');

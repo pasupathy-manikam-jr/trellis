@@ -69,6 +69,12 @@ class Lesson extends Model
         return $enrollment !== null && ! $this->unlocksAt($enrollment)->isFuture();
     }
 
+    /** The course this lesson ultimately belongs to — used for ownership checks. */
+    public function course(): Course
+    {
+        return $this->section->course;
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(LessonComment::class);
