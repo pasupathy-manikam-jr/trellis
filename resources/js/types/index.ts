@@ -141,6 +141,15 @@ export interface CourseCardData {
     instructor: string | null;
     rating: number | null;
     reviews_count: number;
+    categories: { slug: string; name: string }[];
+}
+
+export interface Paginated<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    links: { url: string | null; label: string; active: boolean }[];
 }
 
 export interface Course {
@@ -155,6 +164,7 @@ export interface Course {
     status: CourseStatus;
     published_at: string | null;
     thumbnail_url?: string | null;
+    category_ids?: number[];
     sections?: Section[];
     sections_count?: number;
     lessons_count?: number;

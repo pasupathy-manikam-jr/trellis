@@ -107,6 +107,16 @@ export function CourseCard({ course }: { course: CourseCardData }) {
             </div>
 
             <div className="flex flex-1 flex-col gap-2 p-4">
+                {course.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                        {course.categories.slice(0, 2).map((category) => (
+                            <Badge key={category.slug} variant="outline" className="text-[10px]">
+                                {category.name}
+                            </Badge>
+                        ))}
+                    </div>
+                )}
+
                 <h3 className="group-hover:text-primary font-semibold transition-colors">{course.title}</h3>
 
                 {course.summary && (

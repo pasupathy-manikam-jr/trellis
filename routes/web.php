@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
@@ -58,6 +59,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
 
     Route::get('insights', InsightsController::class)->name('insights');
+
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::patch('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
+    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
     Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
     Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');

@@ -13,8 +13,8 @@ test('the catalog lists only published courses', function () {
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('courses/index')
-            ->has('courses', 1)
-            ->where('courses.0.title', $published->title)
+            ->where('courses.total', 1)
+            ->where('courses.data.0.title', $published->title)
         );
 });
 

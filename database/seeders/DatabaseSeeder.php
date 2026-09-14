@@ -6,6 +6,7 @@ use App\Enums\CourseStatus;
 use App\Enums\LessonType;
 use App\Enums\QuestionType;
 use App\Enums\UserRole;
+use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -33,6 +34,9 @@ class DatabaseSeeder extends Seeder
         if (Course::exists()) {
             return;
         }
+
+        $categories = collect(['Backend', 'Databases', 'Frontend', 'Fundamentals'])
+            ->mapWithKeys(fn ($name) => [$name => Category::create(['name' => $name])]);
 
         $course = Course::create([
             'instructor_id' => $admin->id,
@@ -88,6 +92,8 @@ class DatabaseSeeder extends Seeder
             'published_at' => now(),
         ]);
 
+        $free->categories()->attach($categories['Databases']);
+
         $basics = Section::create(['course_id' => $free->id, 'title' => 'Basics']);
 
         foreach (['Types that actually exist', 'Sequences, not AUTO_INCREMENT', 'JSONB'] as $i => $title) {
@@ -99,6 +105,11 @@ class DatabaseSeeder extends Seeder
                 'is_preview' => $i === 0,
             ]);
         }
+
+        $course->categories()->attach([
+            $categories['Backend']->id,
+            $categories['Fundamentals']->id,
+        ]);
 
         $this->seedQuiz($course);
 

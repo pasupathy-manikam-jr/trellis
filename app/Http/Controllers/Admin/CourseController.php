@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\CourseStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Course;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,9 +46,11 @@ class CourseController extends Controller
     {
         return Inertia::render('admin/courses/edit', [
             'course' => [
-                ...$course->load(['sections.lessons.quiz.questions.options'])->toArray(),
+                ...$course->load(['sections.lessons.quiz.questions.options', 'categories:id'])->toArray(),
                 'thumbnail_url' => $course->thumbnailUrl(),
+                'category_ids' => $course->categories->pluck('id'),
             ],
+            'categories' => Category::orderBy('position')->get(['id', 'name']),
             'enrollments' => $course->enrollments()
                 ->withProgress()
                 ->with('user:id,name,email')
@@ -72,6 +75,10 @@ class CourseController extends Controller
 
         $course->update($data);
         $this->storeThumbnail($request, $course);
+
+        if ($request->has('categories')) {
+            $course->categories()->sync($request->input('categories', []));
+        }
 
         return back()->with('success', 'Course saved.');
     }
@@ -115,6 +122,8 @@ class CourseController extends Controller
             'price_cents' => ['required', 'integer', 'min:0'],
             'status' => ['required', Rule::enum(CourseStatus::class)],
             'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-        ]))->except('thumbnail')->all();
+            'categories' => ['sometimes', 'array'],
+            'categories.*' => ['integer', 'exists:categories,id'],
+        ]))->except('thumbnail', 'categories')->all();
     }
 }

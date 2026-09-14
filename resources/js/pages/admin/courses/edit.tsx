@@ -33,12 +33,16 @@ type AdminEnrollment = {
     progress: { completed: number; total: number; percent: number };
 };
 
+type AdminCategory = { id: number; name: string };
+
 export default function CourseEdit({
     course,
     enrollments,
+    categories,
 }: {
     course: Course;
     enrollments: AdminEnrollment[];
+    categories: AdminCategory[];
 }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Courses', href: '/admin/courses' },
@@ -51,7 +55,7 @@ export default function CourseEdit({
 
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <Flash />
-                <Details course={course} />
+                <Details course={course} categories={categories} />
                 <Curriculum course={course} />
                 <Enrollments course={course} enrollments={enrollments} />
             </div>
@@ -59,7 +63,7 @@ export default function CourseEdit({
     );
 }
 
-function Details({ course }: { course: Course }) {
+function Details({ course, categories }: { course: Course; categories: AdminCategory[] }) {
     const { data, setData, post, processing, errors, isDirty } = useForm<{
         title: string;
         slug: string;
@@ -68,6 +72,7 @@ function Details({ course }: { course: Course }) {
         price_cents: number;
         status: Course['status'];
         thumbnail: File | null;
+        categories: number[];
         _method: string;
     }>({
         title: course.title,
@@ -77,6 +82,7 @@ function Details({ course }: { course: Course }) {
         price_cents: course.price_cents,
         status: course.status,
         thumbnail: null,
+        categories: course.category_ids ?? [],
         // A multipart body can only be POSTed, so the update spoofs PATCH.
         _method: 'patch',
     });
@@ -112,6 +118,33 @@ function Details({ course }: { course: Course }) {
 
             <Field label="Summary" error={errors.summary}>
                 <Input value={data.summary} onChange={(e) => setData('summary', e.target.value)} />
+            </Field>
+
+            <Field label="Categories" error={errors.categories}>
+                {categories.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">
+                        None defined yet — add some under Categories.
+                    </p>
+                ) : (
+                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {categories.map((category) => (
+                            <label key={category.id} className="flex items-center gap-2 text-sm">
+                                <Checkbox
+                                    checked={data.categories.includes(category.id)}
+                                    onCheckedChange={(checked) =>
+                                        setData(
+                                            'categories',
+                                            checked === true
+                                                ? [...data.categories, category.id]
+                                                : data.categories.filter((id) => id !== category.id),
+                                        )
+                                    }
+                                />
+                                {category.name}
+                            </label>
+                        ))}
+                    </div>
+                )}
             </Field>
 
             <Field label="Cover image" error={errors.thumbnail}>

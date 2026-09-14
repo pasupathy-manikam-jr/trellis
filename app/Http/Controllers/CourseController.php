@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CourseStatus;
+use App\Models\Category;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\Section;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,10 +40,49 @@ class CourseController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'string', 'exists:categories,slug'],
+            'price' => ['nullable', Rule::in(['free', 'paid'])],
+            'sort' => ['nullable', Rule::in(['newest', 'popular', 'rating'])],
+        ]);
+
+        $courses = $this->catalogQuery()
+            ->when($filters['q'] ?? null, function (Builder $query, string $term) {
+                // ponytail: ILIKE over title and summary. Fine for a catalogue of
+                // this size; swap for a tsvector index when it stops being.
+                $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
+
+                $query->where(fn (Builder $q) => $q
+                    ->where('title', 'ilike', $like)
+                    ->orWhere('summary', 'ilike', $like));
+            })
+            ->when($filters['category'] ?? null, fn (Builder $query, string $slug) => $query
+                ->whereHas('categories', fn (Builder $q) => $q->where('slug', $slug)))
+            ->when(($filters['price'] ?? null) === 'free', fn (Builder $q) => $q->where('price_cents', 0))
+            ->when(($filters['price'] ?? null) === 'paid', fn (Builder $q) => $q->where('price_cents', '>', 0))
+            ->when(($filters['sort'] ?? 'newest') === 'popular',
+                fn (Builder $q) => $q->reorder()->withCount('enrollments')->orderByDesc('enrollments_count'))
+            ->when(($filters['sort'] ?? null) === 'rating',
+                fn (Builder $q) => $q->reorder()->orderByDesc('reviews_avg_rating'))
+            ->paginate(12)
+            ->withQueryString();
+
         return Inertia::render('courses/index', [
-            'courses' => $this->catalogQuery()->get()->map(fn (Course $c) => $this->card($c)),
+            'courses' => $courses->through(fn (Course $c) => $this->card($c)),
+            'categories' => Category::query()
+                ->withCount(['courses' => fn (Builder $q) => $q->published()])
+                ->orderBy('position')
+                ->get()
+                ->map(fn (Category $c) => $c->only('slug', 'name', 'courses_count')),
+            'filters' => [
+                'q' => $filters['q'] ?? '',
+                'category' => $filters['category'] ?? null,
+                'price' => $filters['price'] ?? null,
+                'sort' => $filters['sort'] ?? 'newest',
+            ],
         ]);
     }
 
@@ -113,6 +154,9 @@ class CourseController extends Controller
             'instructor' => $course->instructor?->name,
             'rating' => $course->reviews_avg_rating ? round((float) $course->reviews_avg_rating, 1) : null,
             'reviews_count' => $course->reviews_count,
+            'categories' => $course->relationLoaded('categories')
+                ? $course->categories->map(fn (Category $c) => $c->only('slug', 'name'))->values()
+                : [],
         ];
     }
 
@@ -122,6 +166,7 @@ class CourseController extends Controller
         return Course::query()
             ->published()
             ->with('instructor:id,name')
+            ->with('categories:id,slug,name')
             ->withCount(['lessons', 'reviews'])
             ->withAvg('reviews', 'rating')
             ->latest('published_at');
