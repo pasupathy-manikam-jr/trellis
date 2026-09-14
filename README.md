@@ -61,8 +61,9 @@ You will see both `lms` and `lms_test`. Don't edit `lms_test` by hand; every tes
 ## Email
 
 `MAIL_MAILER=log` — every message is written to `storage/logs/laravel.log`, no service
-needed. Three are sent: welcome on registration, a receipt on purchase, and the certificate
-when a course is finished.
+needed. Five are sent: welcome on registration, a receipt on purchase, the certificate when
+a course is finished, a new lesson question to whoever owns the course, and an answer back
+to whoever asked.
 
 To read them in a UI instead, run [Mailpit](https://mailpit.axllent.org) and switch to:
 

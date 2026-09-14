@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\LessonQuestionMail;
+use App\Mail\LessonReplyMail;
 use App\Models\Lesson;
 use App\Models\LessonComment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class LessonCommentController extends Controller
@@ -19,6 +22,8 @@ class LessonCommentController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:lesson_comments,id'],
         ]);
 
+        $parent = null;
+
         if ($parentId = $data['parent_id'] ?? null) {
             $parent = LessonComment::findOrFail($parentId);
 
@@ -30,12 +35,38 @@ class LessonCommentController extends Controller
             }
         }
 
-        $lesson->comments()->create([
+        $comment = $lesson->comments()->create([
             ...$data,
             'user_id' => $request->user()->id,
         ]);
 
+        $this->notify($comment, $parent);
+
         return back(fallback: route('learn.lesson', [$lesson->section->course, $lesson]));
+    }
+
+    /**
+     * A question reaches whoever owns the course; an answer reaches whoever
+     * asked. Without this, questions simply sit unread until someone thinks to
+     * go looking — which is most of what kills a course Q&A.
+     *
+     * Nobody is ever mailed about their own writing.
+     */
+    private function notify(LessonComment $comment, ?LessonComment $parent): void
+    {
+        $recipient = $parent
+            ? $parent->author
+            : $comment->lesson->section->course->instructor;
+
+        if ($recipient === null || $recipient->id === $comment->user_id) {
+            return;
+        }
+
+        $comment->load('author', 'lesson.section.course');
+
+        Mail::to($recipient)->send($parent
+            ? new LessonReplyMail($comment)
+            : new LessonQuestionMail($comment));
     }
 
     public function resolve(LessonComment $comment): RedirectResponse
