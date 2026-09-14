@@ -51,15 +51,45 @@ struct Blob {
 // Kept deliberately dim: the hero carries white text, and additive blending
 // blows out fast. These are glows on a dark ground, not colour fields.
 let blobs = [
-    Blob(rgb: (0.137, 0.580, 0.494), cx: 0.20, cy: 0.28, dx: 0.10, dy: 0.08,
-         radius: 0.46, cycles: 1, phase: 0.0, alpha: 0.30),        // teal
-    Blob(rgb: (0.078, 0.655, 0.922), cx: 0.80, cy: 0.42, dx: 0.09, dy: 0.11,
-         radius: 0.40, cycles: 1, phase: 1.9, alpha: 0.22),        // sky
-    Blob(rgb: (0.561, 0.369, 0.871), cx: 0.46, cy: 0.88, dx: 0.12, dy: 0.07,
-         radius: 0.44, cycles: 1, phase: 3.4, alpha: 0.20),        // violet
-    Blob(rgb: (0.961, 0.639, 0.078), cx: 0.70, cy: 0.14, dx: 0.08, dy: 0.10,
-         radius: 0.24, cycles: 2, phase: 0.8, alpha: 0.14),        // amber
+    Blob(rgb: (0.137, 0.580, 0.494), cx: 0.28, cy: 0.34, dx: 0.26, dy: 0.20,
+         radius: 0.46, cycles: 1, phase: 0.0, alpha: 0.34),        // teal
+    Blob(rgb: (0.078, 0.655, 0.922), cx: 0.74, cy: 0.44, dx: 0.24, dy: 0.26,
+         radius: 0.40, cycles: 2, phase: 1.9, alpha: 0.26),        // sky
+    Blob(rgb: (0.561, 0.369, 0.871), cx: 0.48, cy: 0.82, dx: 0.30, dy: 0.18,
+         radius: 0.44, cycles: 1, phase: 3.4, alpha: 0.24),        // violet
+    Blob(rgb: (0.961, 0.639, 0.078), cx: 0.66, cy: 0.18, dx: 0.22, dy: 0.24,
+         radius: 0.24, cycles: 3, phase: 0.8, alpha: 0.18),        // amber
 ]
+
+struct Mote {
+    let x0: CGFloat, y0: CGFloat
+    let speed: CGFloat        // canvas widths travelled per loop; whole numbers only
+    let size: CGFloat
+    let alpha: CGFloat
+    let bob: CGFloat
+    let bobCycles: Double
+    let phase: Double
+}
+
+// Deterministic: the same asset comes out of every run.
+var seed: UInt64 = 0x5EED_1234
+func rnd() -> CGFloat {
+    seed = seed &* 6364136223846793005 &+ 1442695040888963407
+    return CGFloat((seed >> 33) % 100_000) / 100_000
+}
+
+let motes: [Mote] = (0..<70).map { _ in
+    Mote(
+        x0: rnd(),
+        y0: rnd(),
+        speed: [1, 1, 2].randomElement()!,
+        size: 0.004 + rnd() * 0.020,
+        alpha: 0.10 + rnd() * 0.22,
+        bob: 0.02 + rnd() * 0.05,
+        bobCycles: Double([1, 2].randomElement()!),
+        phase: Double(rnd()) * 6.283
+    )
+}
 
 func makeBuffer() -> CVPixelBuffer {
     var pb: CVPixelBuffer?
@@ -116,6 +146,35 @@ for frame in 0..<frameCount {
             startCenter: CGPoint(x: x, y: y), startRadius: 0,
             endCenter: CGPoint(x: x, y: y), endRadius: r,
             options: [])
+    }
+
+    // Motes drift left-to-right, each covering a whole number of canvas widths
+    // over the loop. Drawing every one twice, a width apart, means one slides in
+    // as its twin slides out — no pop at the wrap.
+    for m in motes {
+        let travel = (m.x0 + m.speed * CGFloat(t)).truncatingRemainder(dividingBy: 1)
+        let bob = m.bob * CGFloat(sin(2 * Double.pi * m.bobCycles * t + m.phase))
+        let y = (m.y0 + bob) * CGFloat(height)
+        let r = m.size * CGFloat(width)
+
+        for copy in [travel, travel - 1] {
+            let x = copy * CGFloat(width)
+            if x < -r || x > CGFloat(width) + r { continue }
+
+            let g = CGGradient(
+                colorsSpace: space,
+                colors: [
+                    CGColor(red: 0.78, green: 0.95, blue: 0.94, alpha: m.alpha),
+                    CGColor(red: 0.60, green: 0.88, blue: 0.92, alpha: 0),
+                ] as CFArray,
+                locations: [0, 1])!
+
+            ctx.drawRadialGradient(
+                g,
+                startCenter: CGPoint(x: x, y: y), startRadius: 0,
+                endCenter: CGPoint(x: x, y: y), endRadius: r,
+                options: [])
+        }
     }
 
     CVPixelBufferUnlockBaseAddress(buffer, [])
