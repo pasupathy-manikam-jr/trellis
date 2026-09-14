@@ -1,3 +1,4 @@
+import { AssignmentPanel, type AssignmentPayload } from '@/components/assignment-panel';
 import { Discussion, type Question } from '@/components/discussion';
 import { QuizTaker } from '@/components/quiz-taker';
 import { Badge } from '@/components/ui/badge';
@@ -6,15 +7,16 @@ import PublicLayout from '@/layouts/public-layout';
 import { duration } from '@/lib/format';
 import { type Course, type OutlineSection, type PlayerLesson, type PlayerQuiz, type Progress } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Award, CalendarClock, Check, Download, FileText, ListChecks, Lock, Play } from 'lucide-react';
+import { Award, CalendarClock, Check, Download, FileText, ListChecks, Lock, PenLine, Play } from 'lucide-react';
 
-const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks };
+const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks, assignment: PenLine };
 
 type Props = {
     course: Pick<Course, 'id' | 'slug' | 'title'>;
     outline: OutlineSection[];
     lesson: PlayerLesson;
     quiz: PlayerQuiz | null;
+    assignment: AssignmentPayload | null;
     enrolled: boolean;
     progress: Progress;
     certificate: { serial: string; issued_at: string } | null;
@@ -27,6 +29,7 @@ export default function LessonPlayer({
     outline,
     lesson,
     quiz,
+    assignment,
     enrolled,
     progress,
     certificate,
@@ -192,6 +195,8 @@ export default function LessonPlayer({
                         <div className="mt-6 text-sm leading-relaxed whitespace-pre-wrap">{lesson.content}</div>
                     )}
 
+                    {assignment && <AssignmentPanel assignment={assignment} enrolled={enrolled} />}
+
                     {quiz && enrolled && (
                         <div className="mt-6">
                             <QuizTaker lessonId={lesson.id} quiz={quiz} />
@@ -205,7 +210,7 @@ export default function LessonPlayer({
                     )}
 
                     <div className="mt-8 flex flex-wrap items-center gap-2 border-t pt-4">
-                        {enrolled && lesson.type !== 'quiz' && (
+                        {enrolled && lesson.type !== 'quiz' && lesson.type !== 'assignment' && (
                             <Button
                                 onClick={toggleComplete}
                                 variant={lesson.completed ? 'secondary' : 'default'}

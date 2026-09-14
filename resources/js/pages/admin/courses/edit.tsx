@@ -18,11 +18,11 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { duration } from '@/lib/format';
 import { type BreadcrumbItem, type Course, type Lesson, type LessonType, type Section } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Eye, ExternalLink, ListChecks, LoaderCircle, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-const LESSON_TYPES: LessonType[] = ['text', 'video', 'download', 'quiz'];
+const LESSON_TYPES: LessonType[] = ['text', 'video', 'download', 'quiz', 'assignment'];
 
 type AdminEnrollment = {
     id: number;
@@ -97,6 +97,9 @@ function Details({ course, categories }: { course: Course; categories: AdminCate
         >
             <div className="flex items-center justify-between gap-4">
                 <h2 className="font-semibold">Details</h2>
+                <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/courses/${course.slug}/gradebook`}>Gradebook</Link>
+                </Button>
                 {course.status === 'published' && (
                     <Button asChild variant="ghost" size="sm">
                         <Link href={`/courses/${course.slug}`}>
@@ -361,6 +364,7 @@ function LessonDialog({
         duration_sec: number | string;
         is_preview: boolean;
         drip_days: number | string;
+        assignment: { instructions: string; points: number | string; due_days: number | string };
         video: File | null;
         _method?: string;
     }>({
@@ -372,9 +376,18 @@ function LessonDialog({
         is_preview: lesson?.is_preview ?? false,
         drip_days: lesson?.drip_days ?? 0,
         video: null,
+        assignment: {
+            instructions: lesson?.assignment?.instructions ?? '',
+            points: lesson?.assignment?.points ?? 100,
+            due_days: lesson?.assignment?.due_days ?? '',
+        },
         // A multipart body can only be POSTed, so an edit spoofs PATCH.
         ...(lesson ? { _method: 'patch' } : {}),
     });
+
+    // Nested rules report back as "assignment.points"; Inertia's typed errors
+    // only know the form's top-level keys, so read those from the shared bag.
+    const nested = usePage().props.errors as Record<string, string>;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -446,6 +459,57 @@ function LessonDialog({
                                 Max 500 MB.
                             </p>
                         </Field>
+                    )}
+
+                    {data.type === 'assignment' && (
+                        <div className="grid gap-4 rounded-lg border p-3">
+                            <Field label="The brief" error={nested['assignment.instructions']}>
+                                <Textarea
+                                    rows={6}
+                                    value={data.assignment.instructions}
+                                    onChange={(e) =>
+                                        setData('assignment', {
+                                            ...data.assignment,
+                                            instructions: e.target.value,
+                                        })
+                                    }
+                                    placeholder="What should they produce, and what does good look like?"
+                                />
+                            </Field>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <Field label="Out of" error={nested['assignment.points']}>
+                                    <Input
+                                        type="number"
+                                        value={data.assignment.points}
+                                        onChange={(e) =>
+                                            setData('assignment', {
+                                                ...data.assignment,
+                                                points: e.target.value,
+                                            })
+                                        }
+                                    />
+                                </Field>
+
+                                <Field label="Due after (days)" error={nested['assignment.due_days']}>
+                                    <Input
+                                        type="number"
+                                        value={data.assignment.due_days}
+                                        onChange={(e) =>
+                                            setData('assignment', {
+                                                ...data.assignment,
+                                                due_days: e.target.value,
+                                            })
+                                        }
+                                        placeholder="no deadline"
+                                    />
+                                    <p className="text-muted-foreground text-xs">
+                                        Counted from each learner's enrolment. Late work is accepted and
+                                        flagged, never refused.
+                                    </p>
+                                </Field>
+                            </div>
+                        </div>
                     )}
 
                     <Field label="Content" error={errors.content}>

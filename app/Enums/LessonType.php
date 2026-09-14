@@ -8,4 +8,5 @@ enum LessonType: string
     case Text = 'text';
     case Download = 'download';
     case Quiz = 'quiz';
+    case Assignment = 'assignment';
 }

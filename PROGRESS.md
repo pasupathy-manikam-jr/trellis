@@ -6,7 +6,8 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 stand-in checkout and the handbooks. 238 tests. Public at
 https://github.com/pasupathy-manikam-jr/trellis
 
-**Next direction: Moodle-ward.** See the note at the top of the log.
+**Next direction: Moodle-ward.** First slice — assignments and a weighted
+gradebook — is done. See the note at the top of the log for what is left.
 
 ---
 
@@ -77,6 +78,35 @@ https://github.com/pasupathy-manikam-jr/trellis
 
 ## Log
 
+### 2026-09-14 — assignments and the gradebook
+The first Moodle-ward slice. PLAN.md's non-goals list has been amended rather
+than ignored: weighted gradebooks are no longer a non-goal, and the reason is
+recorded there.
+
+**Assignments** are a lesson type with a brief, a points total and an optional
+deadline counted from each learner's own enrolment — the same clock drip uses.
+One submission per learner, editable until it is marked, text and/or a file.
+Coursework goes on the private disk and is served through a check, like lesson
+video; the author and the course owner can read it and nobody else. Late work
+is accepted and flagged, never refused.
+
+**The gradebook** is `grade_items` / `grade_grades`, Moodle's shape without the
+category tree. A quiz or assignment syncs its own column on save. The course
+grade is a weighted average over marked columns only.
+
+**Decisions worth not relitigating:**
+- Quizzes score out of 100, not their own points total, so adding a question
+  does not rescale marks already given.
+- The gradebook keeps a learner's best quiz attempt, not their latest —
+  retaking for practice should not cost them.
+- Unmarked work is excluded from the average, and no marks means no grade
+  rather than zero. Same principle as an unrated course having no average.
+- Handing in completes the lesson; the mark is separate.
+
+29 tests. Two bugs caught on the way: a policy method for Submission was
+written on AssignmentPolicy, where Laravel never looks for it; and the lesson
+icon maps needed the new type, which only TypeScript noticed.
+
 ### Next session — direction
 The ask is to grow toward what Moodle does. That reverses part of PLAN.md,
 which lists SCORM, LTI, xAPI and weighted gradebooks as explicit non-goals for
@@ -85,10 +115,9 @@ as the decision that is being revisited.
 
 Worth knowing before picking any of it up:
 
-- **Gradebook** is the biggest one and the most structural. Moodle grades
-  *activities*, not lessons, with weighted categories and per-item scales.
-  Today a course is complete/incomplete per lesson plus a quiz pass mark.
-  This would touch `lesson_completions`, `quiz_attempts` and `progress()`.
+- ~~**Gradebook**~~ — done, along with assignments. What is still missing from
+  Moodle's version: grade *categories* (a tree, with weights at each level),
+  letter/scale grades rather than points, and grade export.
 - **SCORM / LTI / xAPI** are the interoperability layer and the reason Moodle
   is heavy. The Composer packages were scouted in session one and are in
   PLAN.md's history — `devianl2/laravel-scorm`, `packbackbooks/lti-1p3-tool`,

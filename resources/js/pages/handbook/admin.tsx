@@ -1,13 +1,14 @@
 import { Cards, HandbookPage, Notes, Section, Steps } from '@/components/handbook-parts';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { BookOpen, FileText, ListChecks, Play, Receipt, Tag, Ticket, Users } from 'lucide-react';
+import { BookOpen, FileText, ListChecks, PenLine, Play, Receipt, Tag, Ticket, Users } from 'lucide-react';
 
 const contents = [
     { href: '#roles', label: 'Who can do what' },
     { href: '#build', label: 'Build a course' },
     { href: '#lessons', label: 'Lesson types' },
     { href: '#timing', label: 'Releasing over time' },
+    { href: '#grading', label: 'Grading' },
     { href: '#learners', label: 'Your learners' },
     { href: '#money', label: 'Money and taxonomy' },
     { href: '#notes', label: 'Worth knowing' },
@@ -152,6 +153,11 @@ export default function AdminHandbook() {
                                 title: 'Quiz',
                                 body: 'Set a pass mark and optional attempt limit, then add single or multiple choice questions with points each.',
                             },
+                            {
+                                icon: PenLine,
+                                title: 'Assignment',
+                                body: 'A brief, a points total, and an optional deadline. Learners hand in text, a file, or both — and it lands in your gradebook to mark.',
+                            },
                         ]}
                     />
                 </Section>
@@ -181,6 +187,45 @@ export default function AdminHandbook() {
                         There is no scheduler to configure and nothing to run — the unlock date is worked out
                         per learner when the page loads. Learners see a calendar icon and the date on anything
                         not yet open.
+                    </p>
+                </Section>
+
+                <Section
+                    id="grading"
+                    eyebrow="Step three"
+                    tone="admin"
+                    title="Grading"
+                    lede="Every course has a gradebook, reached from the course editor."
+                >
+                    <Cards
+                        items={[
+                            {
+                                icon: ListChecks,
+                                title: 'Columns appear on their own',
+                                body: 'Saving a quiz or an assignment creates its gradebook column and keeps it in step. Rename the lesson and the column follows.',
+                            },
+                            {
+                                icon: PenLine,
+                                title: 'Add your own',
+                                body: 'A hand-kept column for participation, an oral, anything done off the platform. Only these can be deleted — an activity column would just come back.',
+                            },
+                            {
+                                icon: Receipt,
+                                title: 'Weights are relative',
+                                body: 'Not percentages. They are normalised against the course total, so they never have to add up to anything — a 3 next to a 1 is simply worth three times as much.',
+                            },
+                            {
+                                icon: Users,
+                                title: 'Marking',
+                                body: 'Work waiting to be marked is listed at the top. Click any cell in the grid to record points and feedback; the learner sees both on the lesson.',
+                            },
+                        ]}
+                    />
+                    <p className="text-muted-foreground mt-4 max-w-prose text-sm">
+                        A learner's grade is a weighted average over the columns marked so far. Work you
+                        have not marked yet is left out rather than counted as zero, so nobody reads 0%
+                        just because you are behind. Quizzes are scored out of 100 and keep the learner's
+                        best attempt.
                     </p>
                 </Section>
 
@@ -261,8 +306,16 @@ export default function AdminHandbook() {
                     <Notes
                         items={[
                             [
-                                'A quiz lesson cannot be ticked complete by hand.',
-                                'It completes only by being passed. That is what makes “finished the course” mean the quizzes were actually answered.',
+                                'Quiz and assignment lessons cannot be ticked complete by hand.',
+                                'A quiz completes by being passed, an assignment by being handed in. That is what makes “finished the course” mean the work was actually done.',
+                            ],
+                            [
+                                'Handing work in completes the lesson, whatever it scores.',
+                                'Progress and grade are separate on purpose: one says they did the work, the other says how well.',
+                            ],
+                            [
+                                'Coursework is never a public URL.',
+                                'Like lesson video, a submitted file is served through a check. Only its author and you can open it.',
                             ],
                             [
                                 'Deleting a category never deletes courses.',

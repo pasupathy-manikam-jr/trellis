@@ -8,6 +8,8 @@ const contents = [
     { href: '#enrol', label: 'Enrol' },
     { href: '#player', label: 'Work through it' },
     { href: '#quizzes', label: 'Quizzes' },
+    { href: '#assignments', label: 'Assignments' },
+    { href: '#grades', label: 'Your grade' },
     { href: '#questions', label: 'Ask a question' },
     { href: '#certificates', label: 'Certificates' },
     { href: '#notes', label: 'Worth knowing' },
@@ -157,6 +159,56 @@ export default function LearnerHandbook() {
                 </Section>
 
                 <Section
+                    id="assignments"
+                    eyebrow="Step five"
+                    tone="learner"
+                    title="Assignments"
+                    lede="Work you hand in for someone to read and mark."
+                >
+                    <Prose>
+                        <p>
+                            An assignment lesson shows the brief, what it is worth, and a deadline if the
+                            course sets one. Write your answer in the box, attach a file, or both.
+                        </p>
+                        <p>
+                            <strong className="text-foreground">Handing in completes the lesson</strong> —
+                            doing the work is what counts, not the mark you get for it. You can keep
+                            changing what you handed in right up until it is marked; after that it is the
+                            record of what was marked, so it is fixed.
+                        </p>
+                        <p>
+                            Deadlines are counted from the day <em>you</em> enrolled, not a fixed date. Late
+                            work is accepted and flagged rather than refused — it is up to the instructor
+                            what that costs you.
+                        </p>
+                    </Prose>
+                </Section>
+
+                <Section
+                    id="grades"
+                    eyebrow="Any time"
+                    tone="learner"
+                    title="Your grade"
+                    lede="Quizzes and assignments both count toward one course grade."
+                >
+                    <Prose>
+                        <p>
+                            Each graded thing is worth a share of the total, and the instructor decides how
+                            big that share is — a final project can count for more than a warm-up quiz.
+                        </p>
+                        <p>
+                            <strong className="text-foreground">Work nobody has marked yet is left out</strong>,
+                            rather than counted as zero. So your grade reflects how you are doing on what has
+                            actually been looked at, and reads as nothing at all until the first mark lands.
+                        </p>
+                        <p>
+                            For quizzes the gradebook keeps your <em>best</em> attempt, so retaking one for
+                            practice can never cost you marks.
+                        </p>
+                    </Prose>
+                </Section>
+
+                <Section
                     id="questions"
                     eyebrow="Any time"
                     tone="learner"
@@ -207,8 +259,12 @@ export default function LearnerHandbook() {
                     <Notes
                         items={[
                             [
-                                'A quiz lesson cannot be ticked complete by hand.',
-                                'It completes only by being passed — which is what makes finishing a course mean something.',
+                                'Quiz and assignment lessons cannot be ticked complete by hand.',
+                                'A quiz completes by being passed, an assignment by being handed in — which is what makes finishing a course mean something.',
+                            ],
+                            [
+                                'Unmarked work does not drag your grade down.',
+                                'It is left out of the average entirely, rather than counted as zero.',
                             ],
                             [
                                 'Timed lessons count from the day you enrolled.',

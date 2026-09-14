@@ -19,6 +19,7 @@ class LessonController extends Controller
 
         $lesson = $section->lessons()->create($this->validated($request));
         $this->storeVideo($request, $lesson);
+        $this->syncAssignment($request, $lesson);
 
         return back();
     }
@@ -29,8 +30,23 @@ class LessonController extends Controller
 
         $lesson->update($this->validated($request, $lesson));
         $this->storeVideo($request, $lesson);
+        $this->syncAssignment($request, $lesson);
 
         return back()->with('success', 'Lesson saved.');
+    }
+
+    /** An assignment lesson carries its brief; saving it syncs the gradebook column. */
+    private function syncAssignment(Request $request, Lesson $lesson): void
+    {
+        if ($lesson->type !== LessonType::Assignment) {
+            return;
+        }
+
+        $lesson->assignment()->updateOrCreate([], [
+            'instructions' => $request->input('assignment.instructions'),
+            'points' => $request->input('assignment.points') ?: 100,
+            'due_days' => $request->input('assignment.due_days'),
+        ]);
     }
 
     /** Uploads land on the private disk — never storage/app/public, which is web-reachable. */
@@ -87,8 +103,12 @@ class LessonController extends Controller
             'duration_sec' => ['nullable', 'integer', 'min:0'],
             'is_preview' => ['boolean'],
             'drip_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
+            'assignment' => ['sometimes', 'array'],
+            'assignment.instructions' => ['nullable', 'string', 'max:20000'],
+            'assignment.points' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'assignment.due_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
             'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:512000'],
-        ]))->except('video')
+        ]))->except('video', 'assignment')
             // The column is NOT NULL; an empty field means "no drip", not null.
             ->map(fn ($value, $key) => $key === 'drip_days' ? (int) $value : $value)
             ->all();

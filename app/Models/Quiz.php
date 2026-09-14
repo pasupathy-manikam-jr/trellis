@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\GradeSource;
 use App\Enums\QuestionType;
 use Database\Factories\QuizFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,6 +25,18 @@ class Quiz extends Model
             'max_attempts' => 'integer',
             'shuffle' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn (self $quiz) => GradeItem::syncFor(
+            $quiz->lesson,
+            GradeSource::Quiz,
+            // Out of 100: a quiz's own points total moves whenever a question
+            // is added, and a gradebook column that rescales itself underneath
+            // existing marks is worse than one fixed denominator.
+            100,
+        ));
     }
 
     public function lesson(): BelongsTo
@@ -124,6 +137,11 @@ class Quiz extends Model
             ]);
 
             $attempt->answers()->createMany($marked);
+
+            // The gradebook keeps the best attempt, not the latest — a learner
+            // who passes and then retakes for practice should not lose marks.
+            $best = (int) $this->attemptsBy($user)->max('score_percent');
+            $this->lesson->gradeItem?->award($user, $best);
 
             return $attempt;
         });

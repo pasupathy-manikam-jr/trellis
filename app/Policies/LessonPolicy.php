@@ -36,12 +36,13 @@ class LessonPolicy
 
     /**
      * Progress is only recorded for people actually enrolled — previews do not count.
-     * A quiz lesson is never ticked by hand: it completes by being passed, which is
-     * what makes "finished the course" mean the quizzes were actually answered.
+     * Quiz and assignment lessons are never ticked by hand: a quiz completes by
+     * being passed, an assignment by being handed in. That is what makes
+     * "finished the course" mean the work was actually done.
      */
     public function complete(User $user, Lesson $lesson): bool
     {
-        return $lesson->type !== LessonType::Quiz
+        return ! in_array($lesson->type, [LessonType::Quiz, LessonType::Assignment], true)
             && $this->isOpenToLearner($user, $lesson);
     }
 

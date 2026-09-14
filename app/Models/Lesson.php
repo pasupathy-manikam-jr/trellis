@@ -75,6 +75,21 @@ class Lesson extends Model
         return $this->section->course;
     }
 
+    public function assignment(): HasOne
+    {
+        return $this->hasOne(Assignment::class);
+    }
+
+    public function gradeItem(): HasOne
+    {
+        return $this->hasOne(GradeItem::class);
+    }
+
+    public function isAssignment(): bool
+    {
+        return $this->type === LessonType::Assignment;
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(LessonComment::class);

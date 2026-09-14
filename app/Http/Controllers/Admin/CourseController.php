@@ -55,7 +55,7 @@ class CourseController extends Controller
 
         return Inertia::render('admin/courses/edit', [
             'course' => [
-                ...$course->load(['sections.lessons.quiz.questions.options', 'categories:id'])->toArray(),
+                ...$course->load(['sections.lessons.quiz.questions.options', 'sections.lessons.assignment', 'categories:id'])->toArray(),
                 'thumbnail_url' => $course->thumbnailUrl(),
                 'category_ids' => $course->categories->pluck('id'),
             ],

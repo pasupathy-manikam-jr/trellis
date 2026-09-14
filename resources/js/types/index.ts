@@ -32,7 +32,7 @@ export type UserRole = 'admin' | 'instructor' | 'student';
 
 export type CourseStatus = 'draft' | 'published' | 'archived';
 
-export type LessonType = 'video' | 'text' | 'download' | 'quiz';
+export type LessonType = 'video' | 'text' | 'download' | 'quiz' | 'assignment';
 
 export interface Lesson {
     id: number;
@@ -46,6 +46,7 @@ export interface Lesson {
     is_preview: boolean;
     drip_days: number;
     quiz?: Quiz | null;
+    assignment?: { instructions: string | null; points: number; due_days: number | null } | null;
 }
 
 export type QuestionType = 'single' | 'multi';

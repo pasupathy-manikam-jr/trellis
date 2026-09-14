@@ -63,6 +63,11 @@ class Course extends Model
         return $this->belongsToMany(Category::class);
     }
 
+    public function gradeItems(): HasMany
+    {
+        return $this->hasMany(GradeItem::class)->orderBy('position');
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

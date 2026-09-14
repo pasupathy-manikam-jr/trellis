@@ -7,11 +7,20 @@
 
 ## Non-goals (explicit — do not build)
 
-SCORM · LTI 1.3 · xAPI/LRS · OneRoster/SIS sync · weighted gradebooks · live video/webinars ·
-multi-tenancy · mobile app · forums · AI anything.
+SCORM · LTI 1.3 · xAPI/LRS · OneRoster/SIS sync · live video/webinars ·
+multi-tenancy · mobile app · AI anything.
 
-These are what make Moodle heavy. A creator selling courses needs none of them.
-Revisit only when a paying customer names one.
+These are what make Moodle heavy. Revisit only when someone names one.
+
+**Two have since been built, deliberately.** The list above is a decision, not a
+law, and the decision changed:
+
+- **Weighted gradebook** — built. Assignments made grading real work rather
+  than quiz percentages, and once there were two kinds of graded activity a
+  single course grade had to exist. See "Grading" below.
+- **Forums** — built as per-lesson Q&A rather than standalone forums. Threads
+  are one level deep and attached to the lesson they are about, which is the
+  part that helps a learner; a general discussion board is not.
 
 ## Decisions already made
 
@@ -57,6 +66,41 @@ reviews            user_id, course_id, rating, body    -- unique(user_id, course
 
 **Progress is derived, not stored.** `completed lessons / total lessons`, cached on
 `enrollments.progress_percent` only if the query ever shows up slow. Don't pre-optimize.
+
+## Grading
+
+Modelled on Moodle's `grade_items` / `grade_grades`, minus the category tree.
+
+```
+assignments   lesson_id, instructions, points, due_days, allow_file
+submissions   assignment_id, user_id, body, file_path, file_name, submitted_at
+              -- unique(assignment_id, user_id): one piece of work per learner
+grade_items   course_id, lesson_id?, name, source(quiz|assignment|manual),
+              max_points, weight, position  -- unique(course_id, lesson_id)
+grade_grades  grade_item_id, user_id, points, feedback, graded_at, graded_by
+              -- unique(grade_item_id, user_id)
+```
+
+**A graded activity owns its column.** Saving a quiz or assignment syncs a
+`grade_item`, so a renamed lesson or changed points total cannot leave a stale
+column behind. `source = manual` is a column an instructor keeps by hand for
+work done off the platform; only those can be deleted.
+
+**Quizzes are scored out of 100, not their own points total.** A quiz's points
+move every time a question is added, and a column that rescales itself
+underneath marks already given is worse than one fixed denominator. The
+gradebook keeps the learner's *best* attempt.
+
+**The course grade is a weighted average over columns marked so far.** Weights
+are relative and normalised against the course total, so they never have to add
+up to anything. Unmarked work is left out rather than counted as zero —
+otherwise every learner reads 0% until the last thing is graded. No marks at
+all means no grade, not zero.
+
+**Submitting completes the lesson; the mark is separate.** Handing work in is
+doing the work. Whether it was any good is the gradebook's business, not the
+progress bar's. Neither quiz nor assignment lessons can be ticked complete by
+hand.
 
 **Drip:** `lessons.drip_days` = days after `enrollments.started_at` before unlock.
 One integer. No cron, no scheduler — compute on read.

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
+use App\Http\Controllers\Admin\GradebookController;
 use App\Http\Controllers\Admin\InsightsController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\LessonVideoController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SubmissionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -53,6 +55,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('comments/{comment}', [LessonCommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::post('lessons/{lesson}/quiz', [QuizAttemptController::class, 'store'])->name('lessons.quiz.attempt');
+
+    Route::post('assignments/{assignment}/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
+    Route::get('submissions/{submission}/file', [SubmissionController::class, 'download'])->name('submissions.download');
     Route::get('certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');
 
     Route::post('lessons/{lesson}/complete', [LessonCompletionController::class, 'store'])->name('lessons.complete');
@@ -69,6 +74,12 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('courses', AdminCourseController::class)->except('show');
 
     Route::get('insights', InsightsController::class)->name('insights');
+
+    Route::get('courses/{course}/gradebook', [GradebookController::class, 'show'])->name('gradebook');
+    Route::post('courses/{course}/grade-items', [GradebookController::class, 'store'])->name('grade-items.store');
+    Route::patch('grade-items/{item}', [GradebookController::class, 'update'])->name('grade-items.update');
+    Route::delete('grade-items/{item}', [GradebookController::class, 'destroy'])->name('grade-items.destroy');
+    Route::post('grade-items/{item}/grades', [GradebookController::class, 'grade'])->name('grade-items.grade');
 
     Route::post('courses/{course}/enrollments', [AdminEnrollmentController::class, 'store'])->name('enrollments.store');
     Route::delete('enrollments/{enrollment}', [AdminEnrollmentController::class, 'destroy'])->name('enrollments.destroy');

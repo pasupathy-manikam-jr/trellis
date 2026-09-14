@@ -36,7 +36,7 @@ class LearnController extends Controller
 
         $this->authorize('view', $lesson);
 
-        $lesson->load('quiz');
+        $lesson->load('quiz', 'assignment');
 
         $user = $request->user();
         $enrollment = $course->enrollmentFor($user);
@@ -53,8 +53,10 @@ class LearnController extends Controller
                 'video_url' => $lesson->video_path ? route('lessons.video', $lesson) : null,
             ],
             'quiz' => $this->quizPayload($lesson, $user),
+            'assignment' => $this->assignmentPayload($lesson, $user, $enrollment),
             'enrolled' => $enrollment !== null,
             'progress' => $enrollment?->progress() ?? ['completed' => 0, 'total' => 0, 'percent' => 0],
+            'grade' => $enrollment?->grade(),
             'certificate' => $enrollment?->certificate()?->only('serial', 'issued_at'),
             'discussion' => $this->discussion($lesson, $user),
             'can_comment' => $user?->can('create', [LessonComment::class, $lesson]) ?? false,
@@ -96,6 +98,42 @@ class LearnController extends Controller
             'author' => $comment->author->name,
             'from_staff' => $comment->isFromStaff($course),
             'can_delete' => $user?->can('delete', $comment) ?? false,
+        ];
+    }
+
+    /**
+     * The brief, what this learner handed in, and their mark if it has been
+     * given one. Never anyone else's work.
+     */
+    private function assignmentPayload(Lesson $lesson, ?User $user, ?Enrollment $enrollment): ?array
+    {
+        if (! $lesson->isAssignment() || ! $lesson->assignment) {
+            return null;
+        }
+
+        $assignment = $lesson->assignment;
+        $submission = $user ? $assignment->submissionFor($user) : null;
+        $grade = $submission?->grade();
+
+        return [
+            'id' => $assignment->id,
+            'instructions' => $assignment->instructions,
+            'points' => $assignment->points,
+            'allow_file' => $assignment->allow_file,
+            'due_at' => $assignment->dueFor($enrollment),
+            'submission' => $submission ? [
+                'body' => $submission->body,
+                'file_name' => $submission->file_name,
+                'file_url' => $submission->file_path ? route('submissions.download', $submission) : null,
+                'submitted_at' => $submission->submitted_at,
+                'late' => $submission->isLate($enrollment),
+            ] : null,
+            'grade' => $grade ? [
+                'points' => (float) $grade->points,
+                'percent' => $grade->percent(),
+                'feedback' => $grade->feedback,
+                'graded_at' => $grade->graded_at,
+            ] : null,
         ];
     }
 

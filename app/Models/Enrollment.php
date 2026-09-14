@@ -150,6 +150,53 @@ class Enrollment extends Model
             ?? $lessons->first();
     }
 
+    /**
+     * The learner's grade for this course: a weighted average over the columns
+     * that have actually been marked.
+     *
+     * Unmarked work is left out rather than counted as zero — otherwise every
+     * learner reads 0% until the very last thing is graded, which says nothing
+     * about how they are doing. Returns a null percent when nothing is marked,
+     * for the same reason an unrated course has no average.
+     *
+     * @return array{points: float, max: float, percent: int|null, graded: int, total: int}
+     */
+    public function grade(): array
+    {
+        $items = $this->course->gradeItems()->get();
+
+        $grades = GradeGrade::whereIn('grade_item_id', $items->pluck('id'))
+            ->where('user_id', $this->user_id)
+            ->get()
+            ->keyBy('grade_item_id');
+
+        $weighted = 0.0;
+        $weightMarked = 0;
+        $points = 0.0;
+        $max = 0.0;
+
+        foreach ($items as $item) {
+            $grade = $grades->get($item->id);
+
+            if (! $grade || $item->max_points === 0) {
+                continue;
+            }
+
+            $weighted += $item->weight * ((float) $grade->points / $item->max_points);
+            $weightMarked += $item->weight;
+            $points += (float) $grade->points;
+            $max += $item->max_points;
+        }
+
+        return [
+            'points' => round($points, 2),
+            'max' => round($max, 2),
+            'percent' => $weightMarked === 0 ? null : (int) round($weighted / $weightMarked * 100),
+            'graded' => $grades->count(),
+            'total' => $items->count(),
+        ];
+    }
+
     public function issueCertificate(): Certificate
     {
         return Certificate::firstOrCreate(
