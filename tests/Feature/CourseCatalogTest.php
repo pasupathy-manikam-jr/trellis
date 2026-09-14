@@ -131,7 +131,7 @@ test('someone else cannot open up your lessons', function () {
     expect($lesson->fresh()->is_preview)->toBeFalse();
 });
 
-test('staff get a way into the editor from the course page and the player', function () {
+test('staff get a way into the editor from the player', function () {
     $course = Course::factory()->published()->create();
     $lesson = Lesson::factory()
         ->for(Section::factory()->for($course))
@@ -140,8 +140,16 @@ test('staff get a way into the editor from the course page and the player', func
     $this->actingAs($course->instructor)
         ->get("/learn/{$course->slug}/{$lesson->id}")
         ->assertInertia(fn (AssertableInertia $page) => $page->where('can_manage', true));
+});
 
-    // A learner reading the same preview gets no editing affordance.
+test('a visitor reading a preview gets no editing affordance', function () {
+    // Its own test: actingAs persists for the rest of a test once called, so a
+    // "guest" request made after one is still signed in.
+    $course = Course::factory()->published()->create();
+    $lesson = Lesson::factory()
+        ->for(Section::factory()->for($course))
+        ->create(['is_preview' => true]);
+
     $this->get("/learn/{$course->slug}/{$lesson->id}")
         ->assertInertia(fn (AssertableInertia $page) => $page->where('can_manage', false));
 });
