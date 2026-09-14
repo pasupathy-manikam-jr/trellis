@@ -9,15 +9,16 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ## Phase 0 — Scaffold
 - [x] `laravel new` w/ react-starter-kit — **Laravel 13.31.0**, React 19, Inertia 2, TS, shadcn
 - [x] Postgres 17.11 (Postgres.app) running; `lms` + `lms_test` created, migrations run
-- [x] **Filament 5.8.1** at `/admin`, gated on `UserRole::Admin` (5 access tests)
+- [x] `UserRole` enum + `role` column on users (admin/instructor/student)
 - [x] **Pest 5** replaces PHPUnit; 31 passed. Pint clean.
 - [x] `storage:link` + `storage/app/public/videos` (gitignored, `.gitkeep` only)
-- [x] Committed `fa69c08`, upgraded in `ff83977`
+- [x] Committed `fa69c08` → upgraded `ff83977` → Filament removed `<pending>`
 
 ## Phase 1 — Content model + admin
 - [ ] Migrations: courses, sections, lessons
 - [ ] Models + relations + factories
-- [ ] Filament: CourseResource (w/ nested sections + lessons, reorderable)
+- [ ] `/admin` route group + `EnsureUserIsAdmin` middleware
+- [ ] React admin: course list + course editor (nested sections/lessons, drag-reorder)
 - [ ] Public catalog `/courses`
 - [ ] Public course detail `/courses/{slug}` (outline, preview lessons)
 - [ ] ✅ *Done when:* course built in admin renders publicly
@@ -29,7 +30,7 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 - [ ] Video lesson (local mp4 streamed through an auth-checked route)
 - [ ] Text lesson
 - [ ] Mark complete + progress %
-- [ ] Manual enroll action in Filament
+- [ ] Manual enroll action in the React admin
 - [ ] Test: non-enrolled user gets 403 on a non-preview lesson **and on its video URL**
 - [ ] ✅ *Done when:* enrolled student completes a course to 100%
 
@@ -44,7 +45,7 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 
 ## Phase 4 — Quizzes + certificates
 - [ ] Migrations: quizzes, questions, options, quiz_attempts, attempt_answers
-- [ ] Filament quiz builder
+- [ ] React quiz builder
 - [ ] Attempt flow + grading + attempt limits
 - [ ] Certificates table + PDF
 - [ ] Public verify `/verify/{serial}`
@@ -60,6 +61,21 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### 2026-09-14 — Filament removed
+Dropped Filament entirely: **-27 packages** (105 → 78 prod), Livewire 4 and the whole
+Blade/Alpine dependency tree gone with it. The stack is now React/Inertia only, which is
+what was asked for from the start — I put Filament in the plan on my own and flagged the
+two-UI-stack cost as a risk without actually asking.
+
+**Kept:** `UserRole` enum, `role` column, seeders. Still needed to gate the admin routes.
+**Replaced:** the 5 panel-access tests became 2 role tests. The one that mattered survives —
+`role` is mass-assignable (seeders and factories need it), so there is a test proving a
+registration POST carrying `role: admin` still comes out a student.
+**Cost, stated plainly:** Phases 1 and 4 now carry the course builder and quiz builder by
+hand. That is the real price of one UI stack, and it lands in Phase 1.
+
+28 tests pass. `/admin` is a 404 again until Phase 1 builds it.
 
 ### 2026-09-14 — upgraded to Laravel 13
 Scaffolded on 12.69.2, then moved to latest: **Laravel 13.31.0 · Filament 5.8.1 · Pest 5 ·

@@ -1,7 +1,8 @@
 # LMS — Plan
 
 **Shape:** course creator selling online. Public catalog → purchase → learn → certificate.
-**Stack:** Laravel 13 · Inertia 2 + React 19 + TS · Tailwind + shadcn/ui · Filament 5 (admin) · Postgres 17.
+**Stack:** Laravel 13 · Inertia 2 + React 19 + TS · Tailwind + shadcn/ui · Postgres 17.
+**One UI stack: React everywhere, admin included.** No Blade/Livewire admin panel.
 **Constraint: runs entirely on localhost. Zero paid services, zero accounts, works offline.**
 
 ## Non-goals (explicit — do not build)
@@ -17,7 +18,7 @@ Revisit only when a paying customer names one.
 | Thing | Choice | Why |
 |---|---|---|
 | Scaffold | `laravel/react-starter-kit` | Official. Inertia+React+TS+shadcn+auth, day one. |
-| Admin | Filament 5 | Course/lesson CRUD for free. Saves ~6 weeks. |
+| Admin | React/Inertia pages under `/admin`, gated by a `role` middleware | Keeps the app one stack. Costs real CRUD work in Phases 1 and 4 — accepted deliberately. |
 | Database | **Postgres 17** | Free locally (Postgres.app / `brew install postgresql@17` / Docker). Same engine local and prod — no dialect surprises. |
 | Serve | `php artisan serve` or Herd | Nothing to install, nothing to pay. |
 | Video | **local disk + `<video>`** | `storage/app/public/videos`. Free, offline, good enough. |
@@ -69,11 +70,12 @@ auth-checked route, not a public URL — otherwise enrollment gating is decorati
 Each phase ships something usable. Stop after any phase and you still have a product.
 
 ### Phase 0 — Scaffold
-Laravel 13 + react-starter-kit, Postgres, Filament, Pest + Pint. Runs on `php artisan serve`.
+Laravel 13 + react-starter-kit, Postgres, Pest + Pint. Runs on `php artisan serve`.
 
 ### Phase 1 — Content model + admin
-`courses / sections / lessons` migrations + models. Filament resources for all three
-(nested, reorderable). Public catalog page + course detail page. No enrollment yet.
+`courses / sections / lessons` migrations + models. `/admin` route group behind an
+`EnsureUserIsAdmin` middleware. React admin pages: course list, course editor with nested
+sections + lessons (drag-reorder). Public catalog page + course detail page. No enrollment yet.
 **Done when:** an instructor can build a full course in admin and see it on the public site.
 
 ### Phase 2 — Enrollment + player
@@ -92,7 +94,7 @@ order history is right. The only missing piece is a card charge.
 // OrderController::store when you go live — everything downstream already works.`
 
 ### Phase 4 — Quizzes + certificates
-Quiz builder in Filament. Attempt flow, grading, pass/fail, attempt limits.
+Quiz builder in the React admin. Attempt flow, grading, pass/fail, attempt limits.
 Certificate issued on course completion (+ passing all required quizzes). PDF + public
 verify URL `/verify/{serial}`.
 **Done when:** completing a course with a quiz produces a downloadable, verifiable cert.
@@ -106,7 +108,8 @@ Reviews. Instructor dashboard (revenue, enrollments, completion rate).
 - **Video files in the repo** — `storage/` is gitignored, keep it that way. Use 2-3 small sample clips for dev; don't commit a gigabyte.
 - **Gated video must not be a public URL** — stream through a controller that checks enrollment. Easy to get wrong on a local disk, and it's the whole access model.
 - **Content edits mid-course** — deleting a lesson orphans completions. Soft-delete lessons, never hard-delete published ones.
-- **Filament vs React drift** — admin in Filament, learner UI in React. Two UI stacks is a real cost, paid for by not building an admin panel. Accepted.
+- **Hand-built admin CRUD** — no admin-panel package means Phases 1 and 4 carry the course builder and quiz builder themselves. This is the price of one UI stack; budget for it rather than rediscovering it mid-phase.
+- **`role` is mass-assignable** — it has to be, for seeders and factories. The guard is a test asserting a registration POST carrying `role: admin` still yields a student. Keep that test.
 
 ## Proof
 
