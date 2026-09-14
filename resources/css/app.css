@@ -42,6 +42,12 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 
+    --color-brand-teal: var(--brand-teal);
+    --color-brand-amber: var(--brand-amber);
+    --color-brand-coral: var(--brand-coral);
+    --color-brand-violet: var(--brand-violet);
+    --color-brand-sky: var(--brand-sky);
+
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
     --color-chart-3: var(--chart-3);
@@ -155,5 +161,51 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Accent ramp. The teal primary carries structure; these carry energy —
+   category tints, feature tiles, hero mesh. Defined in both schemes so a
+   colour never only exists in one.
+--------------------------------------------------------------------------- */
+:root {
+    --brand-teal: hsl(168, 62%, 36%);
+    --brand-amber: hsl(38, 92%, 52%);
+    --brand-coral: hsl(9, 84%, 61%);
+    --brand-violet: hsl(263, 66%, 62%);
+    --brand-sky: hsl(199, 84%, 50%);
+}
+
+.dark {
+    --brand-teal: hsl(165, 62%, 50%);
+    --brand-amber: hsl(40, 94%, 60%);
+    --brand-coral: hsl(9, 86%, 67%);
+    --brand-violet: hsl(263, 74%, 72%);
+    --brand-sky: hsl(199, 88%, 60%);
+}
+
+/* Slow drifting blobs behind the hero. Purely decorative. */
+@keyframes drift {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    33% {
+        transform: translate3d(4%, -6%, 0) scale(1.12);
+    }
+    66% {
+        transform: translate3d(-5%, 4%, 0) scale(0.94);
+    }
+}
+
+.animate-drift {
+    animation: drift 22s ease-in-out infinite;
+}
+
+/* Anyone who asks for less motion gets a still image instead. */
+@media (prefers-reduced-motion: reduce) {
+    .animate-drift {
+        animation: none;
     }
 }

@@ -1,3 +1,4 @@
+import { type FormDataConvertible } from '@inertiajs/core';
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
@@ -14,6 +15,7 @@ interface LoginForm {
     email: string;
     password: string;
     remember: boolean;
+    [key: string]: FormDataConvertible;
 }
 
 interface LoginProps {
@@ -36,8 +38,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <AuthLayout title="Welcome back" description="Log in to pick up where you left off.">
             <Head title="Log in" />
+
+            {status && (
+                <div className="mb-6 rounded-lg border border-emerald-600/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
+                    {status}
+                </div>
+            )}
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
@@ -90,15 +98,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </Button>
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
+                <div className="text-muted-foreground border-t pt-5 text-center text-sm">
                     Don't have an account?{' '}
                     <TextLink href={route('register')} tabIndex={5}>
                         Sign up
                     </TextLink>
                 </div>
             </form>
-
-            {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
         </AuthLayout>
     );
 }

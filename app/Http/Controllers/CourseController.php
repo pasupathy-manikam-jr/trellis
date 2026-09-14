@@ -21,9 +21,12 @@ class CourseController extends Controller
 
         return Inertia::render('welcome', [
             'courses' => $courses->map(fn (Course $c) => $this->card($c)),
-            // The hero photograph is a real course thumbnail, so the page never
-            // ships a stock image that belongs to nothing.
-            'hero_image' => $courses->firstWhere('thumbnail_path', '!=', null)?->thumbnailUrl(),
+            // Zero-config hero media: drop hero.mp4 or hero.jpg into public/ and
+            // it is used. Otherwise fall back to a real course cover, and failing
+            // that the animated gradient — never a stock image belonging to nothing.
+            'hero_video' => $this->publicAsset('hero.mp4', 'hero.webm'),
+            'hero_image' => $this->publicAsset('hero.jpg', 'hero.jpeg', 'hero.png', 'hero.webp')
+                ?? $courses->firstWhere('thumbnail_path', '!=', null)?->thumbnailUrl(),
             'stats' => [
                 'courses' => Course::published()->count(),
                 'lessons' => Lesson::whereIn(
@@ -82,6 +85,18 @@ class CourseController extends Controller
                 ])->values(),
             ],
         ]);
+    }
+
+    /** First of these that exists in public/, as a URL. */
+    private function publicAsset(string ...$names): ?string
+    {
+        foreach ($names as $name) {
+            if (file_exists(public_path($name))) {
+                return asset($name).'?v='.filemtime(public_path($name));
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -1,3 +1,4 @@
+import { type FormDataConvertible } from '@inertiajs/core';
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
@@ -14,6 +15,7 @@ interface RegisterForm {
     email: string;
     password: string;
     password_confirmation: string;
+    [key: string]: FormDataConvertible;
 }
 
 export default function Register() {
@@ -32,7 +34,7 @@ export default function Register() {
     };
 
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
+        <AuthLayout title="Create your account" description="Free to join. Enrol in a course whenever you are ready.">
             <Head title="Register" />
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
@@ -107,7 +109,7 @@ export default function Register() {
                     </Button>
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
+                <div className="text-muted-foreground border-t pt-5 text-center text-sm">
                     Already have an account?{' '}
                     <TextLink href={route('login')} tabIndex={6}>
                         Log in

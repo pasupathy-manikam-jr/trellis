@@ -72,6 +72,18 @@ MAIL_HOST=127.0.0.1
 MAIL_PORT=1025
 ```
 
+## Hero media
+
+The splash hero uses the first of these it finds, so there is nothing to configure:
+
+1. `public/hero.mp4` (or `.webm`) — a background video
+2. `public/hero.jpg` / `.png` / `.webp`
+3. the newest course cover image
+4. an animated gradient mesh, which needs no asset at all
+
+Drop a file into `public/` and reload. The mesh stills itself for anyone with
+`prefers-reduced-motion`.
+
 ## Notes
 
 - Two databases: `lms` (app) and `lms_test` (tests, wiped per run).

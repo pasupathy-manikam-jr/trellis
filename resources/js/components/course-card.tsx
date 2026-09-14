@@ -21,9 +21,22 @@ function Initials({ name }: { name: string }) {
     );
 }
 
+/** One of the accent colours, picked deterministically so a course keeps its own. */
+export function courseTint(id: number): string {
+    const ramp = [
+        'var(--brand-teal)',
+        'var(--brand-sky)',
+        'var(--brand-violet)',
+        'var(--brand-amber)',
+        'var(--brand-coral)',
+    ];
+
+    return ramp[id % ramp.length];
+}
+
 /**
- * Courses without a thumbnail get a deterministic lattice panel rather than a
- * grey box, so a fresh catalogue still looks deliberate.
+ * Courses without a thumbnail get a deterministic coloured lattice panel rather
+ * than a grey box, so a fresh catalogue still looks deliberate.
  */
 export function CourseThumb({
     course,
@@ -43,18 +56,15 @@ export function CourseThumb({
         );
     }
 
-    const hue = 150 + ((course.id * 37) % 90);
-
     return (
         <div
             className={`size-full ${className}`}
             style={{
-                backgroundImage:
-                    `linear-gradient(135deg, hsl(${hue} 45% 22%), hsl(${hue + 25} 55% 34%))`,
+                backgroundImage: `linear-gradient(135deg, ${courseTint(course.id)}, ${courseTint(course.id + 2)})`,
             }}
             aria-hidden
         >
-            <svg className="size-full opacity-20" viewBox="0 0 120 80" preserveAspectRatio="none">
+            <svg className="size-full opacity-25" viewBox="0 0 120 80" preserveAspectRatio="none">
                 <defs>
                     <pattern id={`lattice-${course.id}`} width="20" height="20" patternUnits="userSpaceOnUse">
                         <path
@@ -77,6 +87,12 @@ export function CourseCard({ course }: { course: CourseCardData }) {
             href={`/courses/${course.slug}`}
             className="group bg-card hover:border-primary/30 flex flex-col overflow-hidden rounded-xl border transition-all hover:shadow-lg"
         >
+            <span
+                className="h-1 w-full shrink-0"
+                style={{ background: courseTint(course.id) }}
+                aria-hidden
+            />
+
             <div className="relative aspect-[16/10] overflow-hidden">
                 <CourseThumb
                     course={course}

@@ -1,5 +1,6 @@
 import AppLogoIcon from '@/components/app-logo-icon';
 import { CourseCard } from '@/components/course-card';
+import { HeroBackdrop } from '@/components/hero-backdrop';
 import { Button } from '@/components/ui/button';
 import { type CourseCardData, type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -8,28 +9,32 @@ import { Award, GraduationCap, ListChecks, PlayCircle, Users } from 'lucide-reac
 type Props = {
     courses: CourseCardData[];
     hero_image: string | null;
+    hero_video: string | null;
     stats: { courses: number; lessons: number; learners: number };
 };
 
 const features = [
     {
         icon: PlayCircle,
+        tint: 'var(--brand-sky)',
         title: 'Lessons that stay yours',
         body: 'Video is served from private storage behind an access check — never a public URL that can be passed around.',
     },
     {
         icon: ListChecks,
+        tint: 'var(--brand-violet)',
         title: 'Quizzes that mean something',
         body: 'A quiz lesson completes only by being passed, so finishing a course is a claim that holds up.',
     },
     {
         icon: Award,
+        tint: 'var(--brand-amber)',
         title: 'Certificates you can check',
         body: 'Every certificate carries a serial anyone can verify, with no account needed.',
     },
 ];
 
-export default function Welcome({ courses, hero_image, stats }: Props) {
+export default function Welcome({ courses, hero_image, hero_video, stats }: Props) {
     const { auth } = usePage<SharedData>().props;
 
     return (
@@ -74,14 +79,7 @@ export default function Welcome({ courses, hero_image, stats }: Props) {
                 <main className="flex-1">
                     {/* Hero — the photograph is a real course thumbnail when one exists. */}
                     <section className="relative isolate overflow-hidden">
-                        <div className="absolute inset-0 -z-10">
-                            {hero_image ? (
-                                <img src={hero_image} alt="" className="size-full object-cover" />
-                            ) : (
-                                <div className="size-full bg-[linear-gradient(135deg,hsl(163_56%_14%),hsl(178_48%_26%))]" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-black/55" />
-                        </div>
+                        <HeroBackdrop video={hero_video} image={hero_image} />
 
                         <div className="mx-auto w-full max-w-6xl px-6 py-32 sm:py-40">
                             <div className="max-w-2xl text-white">
@@ -118,8 +116,8 @@ export default function Welcome({ courses, hero_image, stats }: Props) {
                     </section>
 
                     {/* Stats band */}
-                    <section className="bg-primary text-primary-foreground">
-                        <div className="mx-auto grid w-full max-w-6xl grid-cols-3 divide-x divide-white/15 px-6">
+                    <section className="relative overflow-hidden bg-[linear-gradient(100deg,hsl(168_62%_26%),hsl(190_64%_30%),hsl(263_48%_40%))] text-white">
+                        <div className="mx-auto grid w-full max-w-6xl grid-cols-3 divide-x divide-white/20 px-6">
                             {[
                                 { label: 'Courses', value: stats.courses, icon: GraduationCap },
                                 { label: 'Lessons', value: stats.lessons, icon: PlayCircle },
@@ -173,9 +171,19 @@ export default function Welcome({ courses, hero_image, stats }: Props) {
                             </div>
 
                             <div className="grid gap-8 sm:grid-cols-3">
-                                {features.map(({ icon: Icon, title, body }) => (
-                                    <div key={title} className="bg-card rounded-xl border p-6 text-center">
-                                        <span className="bg-primary text-primary-foreground mx-auto mb-4 flex size-12 items-center justify-center rounded-xl">
+                                {features.map(({ icon: Icon, tint, title, body }) => (
+                                    <div
+                                        key={title}
+                                        className="bg-card relative overflow-hidden rounded-xl border p-6 text-center transition-shadow hover:shadow-lg"
+                                    >
+                                        <span
+                                            className="absolute inset-x-0 top-0 h-1"
+                                            style={{ background: tint }}
+                                        />
+                                        <span
+                                            className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl text-white"
+                                            style={{ background: tint }}
+                                        >
                                             <Icon className="size-6" />
                                         </span>
                                         <h3 className="mb-2 font-semibold">{title}</h3>
@@ -187,7 +195,9 @@ export default function Welcome({ courses, hero_image, stats }: Props) {
                     </section>
 
                     {/* CTA */}
-                    <section className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
+                    <section className="relative overflow-hidden">
+                        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,hsl(38_92%_52%/0.14),transparent_60%),radial-gradient(ellipse_at_bottom_right,hsl(263_66%_62%/0.14),transparent_55%)]" />
+                        <div className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-balance">
                             Start with a free preview.
                         </h2>
@@ -197,6 +207,7 @@ export default function Welcome({ courses, hero_image, stats }: Props) {
                         <Button asChild size="lg" className="mt-6">
                             <Link href="/courses">Browse courses</Link>
                         </Button>
+                        </div>
                     </section>
                 </main>
 
