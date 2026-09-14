@@ -75,7 +75,7 @@ export default function LessonPlayer({
                                 className="bg-muted h-1.5 overflow-hidden rounded-full"
                             >
                                 <div
-                                    className="h-full rounded-full bg-emerald-500 transition-[width]"
+                                    className="bg-primary h-full rounded-full transition-[width]"
                                     style={{ width: `${progress.percent}%` }}
                                 />
                             </div>

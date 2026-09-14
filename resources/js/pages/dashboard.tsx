@@ -78,7 +78,7 @@ export default function Dashboard({ enrollments }: { enrollments: Enrollment[] }
                                         className="bg-muted h-1.5 overflow-hidden rounded-full"
                                     >
                                         <div
-                                            className="h-full rounded-full bg-emerald-500"
+                                            className="bg-primary h-full rounded-full"
                                             style={{ width: `${progress.percent}%` }}
                                         />
                                     </div>

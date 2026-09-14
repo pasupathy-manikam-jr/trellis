@@ -1,4 +1,4 @@
-# LMS — Plan
+# Trellis — Plan
 
 **Shape:** course creator selling online. Public catalog → purchase → learn → certificate.
 **Stack:** Laravel 13 · Inertia 2 + React 19 + TS · Tailwind + shadcn/ui · Postgres 17.

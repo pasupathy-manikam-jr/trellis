@@ -11,8 +11,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <header className="border-b">
                 <nav className="mx-auto flex w-full max-w-5xl items-center gap-4 px-4 py-3">
                     <Link href="/courses" className="flex items-center gap-2 font-semibold">
-                        <AppLogoIcon className="size-6 fill-current" />
-                        Courses
+                        <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-md">
+                            <AppLogoIcon className="size-4" />
+                        </span>
+                        Trellis
                     </Link>
 
                     <div className="ml-auto flex items-center gap-2">

@@ -1,4 +1,4 @@
-# Progress
+# Trellis — Progress
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 

@@ -1,4 +1,6 @@
-# LMS
+# Trellis
+
+A learning platform for people who sell courses.
 
 Laravel 13 · Inertia 2 + React 19 + TypeScript · Postgres 17. All local, no paid services.
 
