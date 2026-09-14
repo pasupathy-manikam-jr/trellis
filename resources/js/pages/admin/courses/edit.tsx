@@ -19,7 +19,7 @@ import AppLayout from '@/layouts/app-layout';
 import { duration } from '@/lib/format';
 import { type BreadcrumbItem, type Course, type Lesson, type LessonType, type Section } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Eye, EyeOff, ExternalLink, ListChecks, LoaderCircle, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, ListChecks, LoaderCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 const LESSON_TYPES: LessonType[] = ['text', 'video', 'download', 'quiz', 'assignment'];
@@ -228,6 +228,12 @@ function Curriculum({ course }: { course: Course }) {
                 </p>
             </div>
 
+            <p className="text-muted-foreground text-xs">
+                <strong className="text-foreground">Edit</strong> opens the lesson — its body, type,
+                video, quiz or brief. <strong className="text-foreground">preview / private</strong>
+                decides whether a visitor can read it without enrolling.
+            </p>
+
             {previewCount === 0 && sections.some((s) => s.lessons.length > 0) && (
                 <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
                     Nothing in this course is readable without enrolling, so a visitor has no way to
@@ -301,10 +307,21 @@ function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: 
                         <button
                             type="button"
                             onClick={() => setEditing(lesson)}
-                            className="flex-1 truncate text-left text-sm hover:underline"
+                            className="hover:text-primary flex-1 truncate text-left text-sm hover:underline"
+                            title="Edit this lesson"
                         >
                             {lesson.title}
                         </button>
+
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground shrink-0"
+                            onClick={() => setEditing(lesson)}
+                        >
+                            <Pencil className="size-3.5" /> Edit
+                        </Button>
                         <Badge variant="outline" className="shrink-0">
                             {lesson.type}
                         </Badge>
