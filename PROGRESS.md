@@ -2,7 +2,7 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 0 ✅ complete. Next: Phase 1 — content model + admin.
+**Now:** Phase 1 ✅ complete. Next: Phase 2 — enrolment + lesson player.
 
 ---
 
@@ -15,13 +15,15 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 - [x] Committed `fa69c08` → upgraded `ff83977` → Filament removed `<pending>`
 
 ## Phase 1 — Content model + admin
-- [ ] Migrations: courses, sections, lessons
-- [ ] Models + relations + factories
-- [ ] `/admin` route group + `EnsureUserIsAdmin` middleware
-- [ ] React admin: course list + course editor (nested sections/lessons, drag-reorder)
-- [ ] Public catalog `/courses`
-- [ ] Public course detail `/courses/{slug}` (outline, preview lessons)
-- [ ] ✅ *Done when:* course built in admin renders publicly
+- [x] Migrations: courses, sections, lessons (lessons soft-delete)
+- [x] Models + relations + factories; `Orderable` and `HasUniqueSlug` concerns
+- [x] `/admin` route group + `EnsureUserIsAdmin` middleware (alias `admin`)
+- [x] React admin: course list, create, editor (nested sections/lessons, reorder, lesson dialog)
+- [x] Public catalog `/courses`
+- [x] Public course detail `/courses/{slug}` (outline, preview badges)
+- [x] Seeded demo course + a draft that must stay hidden
+- [x] 50 tests pass (22 new). Pint clean.
+- [x] ✅ *Done when:* course built in admin renders publicly — **verified live via MAMP**
 
 ## Phase 2 — Enrollment + player
 - [ ] Migrations: enrollments, lesson_completions
@@ -61,6 +63,27 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### 2026-09-14 — Phase 1 done
+`courses / sections / lessons` + admin + public catalog. Verified end to end on
+https://oric-lms.local:8890.
+
+**Two shared concerns rather than duplicated logic:**
+`Orderable` (position append + neighbour swap, scoped per parent) and `HasUniqueSlug`
+(fills a blank slug, suffixes until unique in its own scope — global for Course,
+per-section for Lesson). Both are used by two models, which is what earned them.
+
+**Caught while writing the public controller:** `$course->load('sections.lessons')` ships
+every lesson body and `video_path` to the browser. On the *public* page that is a leak
+today, not a Phase 2 problem. The outline now selects only safe columns, and a test asserts
+the response contains neither the body text nor the video path.
+
+**Deliberate simplification:** reordering is up/down buttons, not drag-and-drop. No dnd
+dependency, keyboard and screen-reader accessible for free. Marked `ponytail:` in
+`edit.tsx` with the upgrade path.
+
+**Not built (Phase 2+):** video upload, enrolment, the player. The course page's Enrol
+button is deliberately disabled.
 
 ### 2026-09-14 — Filament removed
 Dropped Filament entirely: **-27 packages** (105 → 78 prod), Livewire 4 and the whole
