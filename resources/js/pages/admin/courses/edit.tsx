@@ -1,6 +1,6 @@
 import { ConfirmButton } from '@/components/confirm-button';
 import { Flash } from '@/components/flash';
-import { QuizDialog } from '@/components/quiz-builder';
+import { QuizDialog, type BankQuestion } from '@/components/quiz-builder';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -39,10 +39,12 @@ export default function CourseEdit({
     course,
     enrollments,
     categories,
+    bank,
 }: {
     course: Course;
     enrollments: AdminEnrollment[];
     categories: AdminCategory[];
+    bank: BankQuestion[];
 }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Courses', href: '/admin/courses' },
@@ -56,7 +58,7 @@ export default function CourseEdit({
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <Flash />
                 <Details course={course} categories={categories} />
-                <Curriculum course={course} />
+                <Curriculum course={course} bank={bank} />
                 <Enrollments course={course} enrollments={enrollments} />
             </div>
         </AppLayout>
@@ -209,7 +211,7 @@ function Details({ course, categories }: { course: Course; categories: AdminCate
     );
 }
 
-function Curriculum({ course }: { course: Course }) {
+function Curriculum({ course, bank }: { course: Course; bank: BankQuestion[] }) {
     const sections = course.sections ?? [];
     const previewCount = sections.reduce(
         (n, section) => n + section.lessons.filter((lesson) => lesson.is_preview).length,
@@ -246,6 +248,7 @@ function Curriculum({ course }: { course: Course }) {
                 <SectionCard
                     key={section.id}
                     section={section}
+                    bank={bank}
                     isFirst={i === 0}
                     isLast={i === sections.length - 1}
                 />
@@ -274,7 +277,17 @@ function Curriculum({ course }: { course: Course }) {
     );
 }
 
-function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: boolean; isLast: boolean }) {
+function SectionCard({
+    section,
+    bank,
+    isFirst,
+    isLast,
+}: {
+    section: Section;
+    bank: BankQuestion[];
+    isFirst: boolean;
+    isLast: boolean;
+}) {
     const [editing, setEditing] = useState<Lesson | 'new' | null>(null);
     const [quizFor, setQuizFor] = useState<Lesson | null>(null);
     const { data, setData, patch, errors } = useForm({ title: section.title });
@@ -376,7 +389,7 @@ function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: 
                 </Button>
             </div>
 
-            {quizFor && <QuizDialog lesson={quizFor} onClose={() => setQuizFor(null)} />}
+            {quizFor && <QuizDialog lesson={quizFor} bank={bank} onClose={() => setQuizFor(null)} />}
 
             {editing && (
                 <LessonDialog

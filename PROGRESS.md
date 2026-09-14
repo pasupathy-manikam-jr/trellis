@@ -78,6 +78,24 @@ gradebook — is done. See the note at the top of the log for what is left.
 
 ## Log
 
+### 2026-09-14 — question bank
+Questions were locked to one quiz, so a good question had to be rewritten for
+every quiz that wanted it. They now live in a course-level bank and quizzes
+point at them through `quiz_questions` slots.
+
+The refactor kept `Quiz::questions()` returning the same ordered collection, so
+grading, the player payload and every existing test carried on unchanged — all
+272 stayed green through the schema move, which is what made it safe to do.
+
+**Caught while doing it:** moving question order onto the slot meant the old
+`Question::move()` would have reordered the *bank* rather than the quiz. No test
+covered that, and it would have been a quiet, confusing bug. `Quiz::moveQuestion()`
+now owns it, and the routes are quiz-scoped.
+
+**Still missing from Moodle's version:** random selection from a category per
+attempt, a bank browsing UI, and QTI. `question_categories` exists and is unused
+until there is somewhere to manage it.
+
 ### 2026-09-14 — assignments and the gradebook
 The first Moodle-ward slice. PLAN.md's non-goals list has been amended rather
 than ignored: weighted gradebooks are no longer a non-goal, and the reason is

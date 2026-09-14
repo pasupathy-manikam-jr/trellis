@@ -14,6 +14,29 @@ use Illuminate\Validation\ValidationException;
 
 class QuestionController extends Controller
 {
+    /** Slots a question that already exists in the bank into this quiz. */
+    public function attach(Request $request, Quiz $quiz): RedirectResponse
+    {
+        $this->authorize('manage', $quiz->course());
+
+        $ids = $request->validate([
+            'questions' => ['required', 'array', 'min:1'],
+            'questions.*' => ['integer', 'exists:questions,id'],
+        ])['questions'];
+
+        // Only from this course's own bank — an id from elsewhere is ignored
+        // rather than trusted.
+        $questions = Question::whereIn('id', $ids)
+            ->where('course_id', $quiz->course()->id)
+            ->get();
+
+        foreach ($questions as $question) {
+            $quiz->addQuestion($question);
+        }
+
+        return back()->with('success', $questions->count().' added from the bank.');
+    }
+
     public function store(Request $request, Quiz $quiz): RedirectResponse
     {
         $this->authorize('manage', $quiz->course());
@@ -21,13 +44,18 @@ class QuestionController extends Controller
         $data = $this->validated($request);
 
         DB::transaction(function () use ($quiz, $data) {
-            $question = $quiz->questions()->create([
+            // Written into the course's bank, then slotted into this quiz, so it
+            // can be reused elsewhere later without being rewritten.
+            $question = Question::create([
+                'course_id' => $quiz->course()->id,
+                'quiz_id' => $quiz->id,
                 'type' => $data['type'],
                 'prompt' => $data['prompt'],
                 'points' => $data['points'],
             ]);
 
             $this->syncOptions($question, $data['options']);
+            $quiz->addQuestion($question);
         });
 
         return back();
@@ -52,24 +80,36 @@ class QuestionController extends Controller
         return back()->with('success', 'Question saved.');
     }
 
-    public function move(Request $request, Question $question): RedirectResponse
+    /** Reorders a question inside one quiz, leaving every other quiz alone. */
+    public function move(Request $request, Quiz $quiz, Question $question): RedirectResponse
     {
-        $this->authorize('manage', $question->course());
+        $this->authorize('manage', $quiz->course());
 
-        $question->move($request->validate([
+        $quiz->moveQuestion($question, $request->validate([
             'direction' => ['required', Rule::in(['up', 'down'])],
         ])['direction']);
 
         return back();
     }
 
+    /** Takes a question out of this quiz. It stays in the bank for reuse. */
+    public function detach(Quiz $quiz, Question $question): RedirectResponse
+    {
+        $this->authorize('manage', $quiz->course());
+
+        $quiz->questions()->detach($question->id);
+
+        return back()->with('success', 'Removed from this quiz. It is still in the bank.');
+    }
+
+    /** Deletes it everywhere. Slots cascade, so it leaves every quiz using it. */
     public function destroy(Question $question): RedirectResponse
     {
-        $this->authorize('manage', $question->course());
+        $this->authorize('manage', $question->course);
 
         $question->delete();
 
-        return back()->with('success', 'Question deleted.');
+        return back()->with('success', 'Question deleted from the bank.');
     }
 
     /**

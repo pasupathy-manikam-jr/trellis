@@ -89,8 +89,10 @@ test('the whole nested tree of another course is closed too', function () {
         ['patch', "/admin/quizzes/{$quiz->id}"],
         ['post', "/admin/quizzes/{$quiz->id}/questions"],
         ['patch', "/admin/questions/{$question->id}"],
-        ['patch', "/admin/questions/{$question->id}/move"],
         ['delete', "/admin/questions/{$question->id}"],
+        ['post', "/admin/quizzes/{$quiz->id}/questions/attach"],
+        ['patch', "/admin/quizzes/{$quiz->id}/questions/{$question->id}/move"],
+        ['delete', "/admin/quizzes/{$quiz->id}/questions/{$question->id}"],
         ['post', "/admin/courses/{$this->theirs->slug}/enrollments"],
         ['delete', "/admin/enrollments/{$enrollment->id}"],
     ];

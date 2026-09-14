@@ -98,8 +98,10 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
     Route::post('lessons/{lesson}/quiz', [QuizController::class, 'store'])->name('quizzes.store');
     Route::patch('quizzes/{quiz}', [QuizController::class, 'update'])->name('quizzes.update');
     Route::post('quizzes/{quiz}/questions', [QuestionController::class, 'store'])->name('questions.store');
+    Route::post('quizzes/{quiz}/questions/attach', [QuestionController::class, 'attach'])->name('questions.attach');
     Route::patch('questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
-    Route::patch('questions/{question}/move', [QuestionController::class, 'move'])->name('questions.move');
+    Route::patch('quizzes/{quiz}/questions/{question}/move', [QuestionController::class, 'move'])->name('questions.move');
+    Route::delete('quizzes/{quiz}/questions/{question}', [QuestionController::class, 'detach'])->name('questions.detach');
     Route::delete('questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
 });
 

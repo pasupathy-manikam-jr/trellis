@@ -8,6 +8,7 @@ use Database\Factories\QuizFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
@@ -49,9 +50,59 @@ class Quiz extends Model
         return $this->lesson->course();
     }
 
-    public function questions(): HasMany
+    /**
+     * The questions this quiz asks, in slot order.
+     *
+     * Questions live in the course's bank; a quiz points at the ones it wants,
+     * so the same question can appear in a practice quiz and a final without
+     * being written twice. Callers see the same ordered collection they always
+     * did.
+     */
+    public function questions(): BelongsToMany
     {
-        return $this->hasMany(Question::class)->orderBy('position');
+        return $this->belongsToMany(Question::class, 'quiz_questions')
+            ->withPivot('position')
+            ->orderBy('quiz_questions.position');
+    }
+
+    /**
+     * Swaps a question with its neighbour *in this quiz*. Order is a property of
+     * the slot, not of the question — the same question can sit third in one
+     * quiz and first in another.
+     */
+    public function moveQuestion(Question $question, string $direction): void
+    {
+        $slots = DB::table('quiz_questions')
+            ->where('quiz_id', $this->id)
+            ->orderBy('position')
+            ->get();
+
+        $index = $slots->search(fn ($slot) => $slot->question_id === $question->id);
+
+        if ($index === false) {
+            return;
+        }
+
+        $swapWith = $direction === 'up' ? $index - 1 : $index + 1;
+
+        if ($swapWith < 0 || $swapWith >= $slots->count()) {
+            return;
+        }
+
+        DB::transaction(function () use ($slots, $index, $swapWith) {
+            DB::table('quiz_questions')->where('id', $slots[$index]->id)
+                ->update(['position' => $slots[$swapWith]->position]);
+            DB::table('quiz_questions')->where('id', $slots[$swapWith]->id)
+                ->update(['position' => $slots[$index]->position]);
+        });
+    }
+
+    /** Puts a bank question into this quiz, at the end. */
+    public function addQuestion(Question $question): void
+    {
+        $this->questions()->syncWithoutDetaching([
+            $question->id => ['position' => (int) $this->questions()->max('quiz_questions.position') + 1],
+        ]);
     }
 
     public function attempts(): HasMany

@@ -13,10 +13,27 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { type Lesson, type QuestionType, type Quiz, type QuizQuestion } from '@/types';
 import { router, useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, LoaderCircle, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Library, LoaderCircle, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-export function QuizDialog({ lesson, onClose }: { lesson: Lesson; onClose: () => void }) {
+export type BankQuestion = {
+    id: number;
+    prompt: string;
+    type: QuestionType;
+    points: number;
+    options_count: number;
+    used_by: number[];
+};
+
+export function QuizDialog({
+    lesson,
+    bank,
+    onClose,
+}: {
+    lesson: Lesson;
+    bank: BankQuestion[];
+    onClose: () => void;
+}) {
     const quiz = lesson.quiz;
 
     return (
@@ -30,7 +47,7 @@ export function QuizDialog({ lesson, onClose }: { lesson: Lesson; onClose: () =>
                 {quiz ? (
                     <div className="flex flex-col gap-6">
                         <Settings quiz={quiz} />
-                        <Questions quiz={quiz} />
+                        <Questions quiz={quiz} bank={bank} />
                     </div>
                 ) : (
                     <div className="rounded-lg border border-dashed p-6 text-center">
@@ -100,8 +117,10 @@ function Settings({ quiz }: { quiz: Quiz }) {
     );
 }
 
-function Questions({ quiz }: { quiz: Quiz }) {
+function Questions({ quiz, bank }: { quiz: Quiz; bank: BankQuestion[] }) {
     const [editing, setEditing] = useState<QuizQuestion | 'new' | null>(null);
+    const [picking, setPicking] = useState(false);
+    const available = bank.filter((question) => !question.used_by.includes(quiz.id));
     const total = quiz.questions.reduce((n, q) => n + q.points, 0);
 
     return (
@@ -113,9 +132,16 @@ function Questions({ quiz }: { quiz: Quiz }) {
                         {quiz.questions.length} · {total} point{total === 1 ? '' : 's'}
                     </span>
                 </h3>
-                <Button type="button" size="sm" variant="secondary" onClick={() => setEditing('new')}>
-                    <Plus className="size-4" /> Add question
-                </Button>
+                <div className="flex gap-2">
+                    {available.length > 0 && (
+                        <Button type="button" size="sm" variant="outline" onClick={() => setPicking(true)}>
+                            <Library className="size-4" /> From bank ({available.length})
+                        </Button>
+                    )}
+                    <Button type="button" size="sm" variant="secondary" onClick={() => setEditing('new')}>
+                        <Plus className="size-4" /> Write one
+                    </Button>
+                </div>
             </div>
 
             {quiz.questions.length === 0 ? (
@@ -147,7 +173,7 @@ function Questions({ quiz }: { quiz: Quiz }) {
                                     disabled={i === 0}
                                     onClick={() =>
                                         router.patch(
-                                            `/admin/questions/${question.id}/move`,
+                                            `/admin/quizzes/${quiz.id}/questions/${question.id}/move`,
                                             { direction: 'up' },
                                             { preserveScroll: true },
                                         )
@@ -163,7 +189,7 @@ function Questions({ quiz }: { quiz: Quiz }) {
                                     disabled={i === quiz.questions.length - 1}
                                     onClick={() =>
                                         router.patch(
-                                            `/admin/questions/${question.id}/move`,
+                                            `/admin/quizzes/${quiz.id}/questions/${question.id}/move`,
                                             { direction: 'down' },
                                             { preserveScroll: true },
                                         )
@@ -175,13 +201,15 @@ function Questions({ quiz }: { quiz: Quiz }) {
                                 <ConfirmButton
                                     size="icon"
                                     className="text-muted-foreground hover:text-destructive"
-                                    title="Delete this question?"
-                                    description="Its options go with it. Attempts already graded are unaffected."
-                                    confirmLabel="Delete question"
+                                    title="Remove from this quiz?"
+                                    description="It stays in the course's question bank, and any other quiz using it is unaffected."
+                                    confirmLabel="Remove"
+                                    destructive={false}
                                     onConfirm={() =>
-                                        router.delete(`/admin/questions/${question.id}`, {
-                                            preserveScroll: true,
-                                        })
+                                        router.delete(
+                                            `/admin/quizzes/${quiz.id}/questions/${question.id}`,
+                                            { preserveScroll: true },
+                                        )
                                     }
                                 >
                                     <Trash2 className="size-4" />
@@ -191,6 +219,10 @@ function Questions({ quiz }: { quiz: Quiz }) {
                         </li>
                     ))}
                 </ul>
+            )}
+
+            {picking && (
+                <BankPicker quiz={quiz} questions={available} onClose={() => setPicking(false)} />
             )}
 
             {editing && (
@@ -362,6 +394,86 @@ function QuestionForm({
                         <Button type="submit" disabled={processing}>
                             {processing && <LoaderCircle className="size-4 animate-spin" />}
                             {question ? 'Save question' : 'Add question'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+/** Pick questions already written for this course rather than writing them again. */
+function BankPicker({
+    quiz,
+    questions,
+    onClose,
+}: {
+    quiz: Quiz;
+    questions: BankQuestion[];
+    onClose: () => void;
+}) {
+    const { data, setData, post, processing } = useForm<{ questions: number[] }>({ questions: [] });
+
+    const toggle = (id: number) =>
+        setData(
+            'questions',
+            data.questions.includes(id)
+                ? data.questions.filter((x) => x !== id)
+                : [...data.questions, id],
+        );
+
+    return (
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Add from the bank</DialogTitle>
+                    <DialogDescription>
+                        Questions already written for this course. Adding one here does not remove it
+                        from anywhere else.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form
+                    noValidate
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        post(`/admin/quizzes/${quiz.id}/questions/attach`, {
+                            preserveScroll: true,
+                            onSuccess: onClose,
+                        });
+                    }}
+                    className="flex flex-col gap-4"
+                >
+                    <ul className="divide-y rounded-lg border">
+                        {questions.map((question) => (
+                            <li key={question.id}>
+                                <label className="flex cursor-pointer items-start gap-3 p-3">
+                                    <Checkbox
+                                        checked={data.questions.includes(question.id)}
+                                        onCheckedChange={() => toggle(question.id)}
+                                    />
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-sm">{question.prompt}</span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {question.type} · {question.points} pt ·{' '}
+                                            {question.options_count} options
+                                            {question.used_by.length > 0 && (
+                                                <> · in {question.used_by.length} other quiz(zes)</>
+                                            )}
+                                        </span>
+                                    </span>
+                                </label>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="ghost" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={processing || data.questions.length === 0}>
+                            {processing && <LoaderCircle className="size-4 animate-spin" />}
+                            Add {data.questions.length || ''}
                         </Button>
                     </div>
                 </form>

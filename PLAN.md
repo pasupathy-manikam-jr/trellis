@@ -67,6 +67,34 @@ reviews            user_id, course_id, rating, body    -- unique(user_id, course
 **Progress is derived, not stored.** `completed lessons / total lessons`, cached on
 `enrollments.progress_percent` only if the query ever shows up slow. Don't pre-optimize.
 
+## Question bank
+
+Questions belong to a **course**, not to the quiz that happened to need them
+first. A quiz points at the ones it wants through a slot table.
+
+```
+question_categories  course_id, name, position
+questions            course_id, question_category_id?, quiz_id?, type, prompt,
+                     points, position          -- quiz_id is now only provenance
+quiz_questions       quiz_id, question_id, position
+                     -- unique(quiz_id, question_id)
+```
+
+**Order is a property of the slot, not the question.** The same question can sit
+third in a practice quiz and first in the final. Reordering one leaves the other
+untouched.
+
+**Removing is not deleting.** Taking a question out of a quiz detaches the slot
+and leaves it in the bank for reuse. Deleting from the bank cascades and removes
+it from every quiz at once — two different buttons, deliberately.
+
+Writing a question inside the quiz builder puts it in the bank automatically, so
+the bank fills up as a by-product of ordinary work rather than needing to be
+curated first.
+
+**Not built:** random selection from a category per attempt, and QTI import or
+export. The category table exists and is unused pending a bank UI.
+
 ## Grading
 
 Modelled on Moodle's `grade_items` / `grade_grades`, minus the category tree.
