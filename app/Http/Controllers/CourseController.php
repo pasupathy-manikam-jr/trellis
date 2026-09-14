@@ -10,6 +10,20 @@ use Inertia\Response;
 
 class CourseController extends Controller
 {
+    /** The splash page: real courses, not marketing copy. */
+    public function home(): Response
+    {
+        return Inertia::render('welcome', [
+            'courses' => Course::query()
+                ->published()
+                ->with('instructor:id,name')
+                ->withCount('lessons')
+                ->latest('published_at')
+                ->take(3)
+                ->get(['id', 'instructor_id', 'slug', 'title', 'summary', 'price_cents', 'currency']),
+        ]);
+    }
+
     public function index(): Response
     {
         return Inertia::render('courses/index', [

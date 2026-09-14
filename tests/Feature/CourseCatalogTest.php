@@ -56,3 +56,23 @@ test('the public outline never exposes lesson bodies or video paths', function (
         ->missing('course.sections.0.lessons.0.video_path')
     );
 });
+
+test('the splash page shows published courses only, and works logged out', function () {
+    Course::factory()->published()->create(['title' => 'Live one']);
+    Course::factory()->create(['title' => 'Draft one']);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('welcome')
+            ->has('courses', 1)
+            ->where('courses.0.title', 'Live one')
+        )
+        ->assertDontSee('Draft one');
+});
+
+test('the splash page shows at most three courses', function () {
+    Course::factory()->count(5)->published()->create();
+
+    $this->get('/')->assertInertia(fn (AssertableInertia $page) => $page->has('courses', 3));
+});

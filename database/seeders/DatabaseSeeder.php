@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
 
         $course = Course::create([
             'instructor_id' => $admin->id,
-            'title' => 'Building an LMS with Laravel',
+            'title' => 'Building a Course Platform',
             'summary' => 'Design the schema, build the course editor, ship the player.',
             'description' => "A worked example that follows this repository's own plan.\n\n"
                 .'Start with the data model, add an admin that makes it editable, then open it to learners.',
@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
 
         $outline = [
             'Foundations' => [
-                ['Why not fork Moodle', LessonType::Text, true],
+                ['Why not fork an existing platform', LessonType::Text, true],
                 ['Schema: courses, sections, lessons', LessonType::Text, true],
                 ['Slugs and ordering', LessonType::Text, false],
             ],

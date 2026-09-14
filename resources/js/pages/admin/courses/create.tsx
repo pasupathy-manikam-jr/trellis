@@ -46,7 +46,7 @@ export default function CourseCreate() {
                         autoFocus
                         value={data.title}
                         onChange={(e) => setData('title', e.target.value)}
-                        placeholder="Building an LMS with Laravel"
+                        placeholder="Designing for the web"
                     />
                     {errors.title && <p className="text-sm text-red-600">{errors.title}</p>}
                 </div>

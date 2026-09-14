@@ -17,9 +17,8 @@ use App\Http\Controllers\LessonVideoController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QuizAttemptController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('welcome'))->name('home');
+Route::get('/', [CourseController::class, 'home'])->name('home');
 
 Route::get('courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses.show');
