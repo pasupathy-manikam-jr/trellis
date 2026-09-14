@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { type SharedData } from '@/types';
-import { Download, Eye, FileText, ListChecks, LoaderCircle, PenLine, Play } from 'lucide-react';
+import { ArrowRight, Download, Eye, FileText, ListChecks, LoaderCircle, Lock, PenLine, Play } from 'lucide-react';
 
 const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks, assignment: PenLine };
 
@@ -34,6 +34,10 @@ export default function CourseShow({
 }: Props) {
     const sections = course.sections ?? [];
     const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
+    const previewCount = sections.reduce(
+        (n, s) => n + s.lessons.filter((lesson) => lesson.is_preview).length,
+        0,
+    );
 
     return (
         <PublicLayout
@@ -87,6 +91,18 @@ export default function CourseShow({
                         </span>
                     </h2>
 
+                    {previewCount > 0 && !enrolled && (
+                        <p className="border-primary/25 bg-primary/5 text-primary mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+                            <Eye className="size-4 shrink-0" />
+                            <span>
+                                <strong className="font-semibold">
+                                    {previewCount} lesson{previewCount === 1 ? ' is' : 's are'} free to read
+                                </strong>{' '}
+                                — open {previewCount === 1 ? 'it' : 'them'} below, no account needed.
+                            </span>
+                        </p>
+                    )}
+
                     <div className="mt-3 flex flex-col gap-3">
                         {sections.map((section) => (
                             <div key={section.id} className="rounded-lg border">
@@ -95,28 +111,59 @@ export default function CourseShow({
                                     {section.lessons.map((lesson) => {
                                         const Icon = icons[lesson.type];
 
-                                        return (
-                                            <li key={lesson.id} className="flex items-center gap-3 px-4 py-2 text-sm">
-                                                <Icon className="text-muted-foreground size-4 shrink-0" />
-                                                {enrolled || can_preview_all || lesson.is_preview ? (
-                                                    <Link
-                                                        href={`/learn/${course.slug}/${lesson.id}`}
-                                                        className="flex-1 truncate hover:underline"
-                                                    >
-                                                        {lesson.title}
-                                                    </Link>
-                                                ) : (
-                                                    <span className="flex-1 truncate">{lesson.title}</span>
-                                                )}
-                                                {lesson.is_preview && (
-                                                    <Badge variant="secondary" className="shrink-0">
-                                                        <Eye className="size-3" /> preview
+                                        const open = enrolled || can_preview_all || lesson.is_preview;
+                                        const free = lesson.is_preview && !enrolled;
+
+                                        const row = (
+                                            <>
+                                                <Icon
+                                                    className={`size-4 shrink-0 ${free ? 'text-primary' : 'text-muted-foreground'}`}
+                                                />
+                                                <span
+                                                    className={`flex-1 truncate ${
+                                                        free
+                                                            ? 'text-primary font-medium'
+                                                            : open
+                                                              ? ''
+                                                              : 'text-muted-foreground'
+                                                    }`}
+                                                >
+                                                    {lesson.title}
+                                                </span>
+
+                                                {free && (
+                                                    <Badge className="shrink-0 gap-1">
+                                                        Free <ArrowRight className="size-3" />
                                                     </Badge>
                                                 )}
+
+                                                {!open && (
+                                                    <Lock className="text-muted-foreground/60 size-3.5 shrink-0" />
+                                                )}
+
                                                 {duration(lesson.duration_sec) && (
                                                     <span className="text-muted-foreground shrink-0 text-xs">
                                                         {duration(lesson.duration_sec)}
                                                     </span>
+                                                )}
+                                            </>
+                                        );
+
+                                        return (
+                                            <li key={lesson.id}>
+                                                {open ? (
+                                                    <Link
+                                                        href={`/learn/${course.slug}/${lesson.id}`}
+                                                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                                                            free ? 'hover:bg-primary/5' : 'hover:bg-muted'
+                                                        }`}
+                                                    >
+                                                        {row}
+                                                    </Link>
+                                                ) : (
+                                                    <div className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                                                        {row}
+                                                    </div>
                                                 )}
                                             </li>
                                         );
