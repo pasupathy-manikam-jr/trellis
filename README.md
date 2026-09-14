@@ -6,7 +6,10 @@ See [PLAN.md](PLAN.md) for scope and phases, [PROGRESS.md](PROGRESS.md) for stat
 
 ## Run it
 
-Postgres does not start on boot. Start it once per reboot:
+Served by **MAMP PRO** at https://oric-lms.local:8890 (vhost doc root → `public/`, PHP 8.4.17).
+Apache runs on its own; you do not start it.
+
+Postgres does *not* start on boot. Once per reboot:
 
 ```sh
 "/Applications/Postgres.app/Contents/Versions/17/bin/pg_ctl" \
@@ -16,32 +19,21 @@ Postgres does not start on boot. Start it once per reboot:
 
 (Or open Postgres.app once — it adopts the same data directory and gives you a menubar toggle.)
 
-Then:
+Then, for hot reload while developing:
 
 ```sh
-composer run dev     # serve :8000 + vite :5173 + queue + logs
+composer run dev     # vite + queue + logs (no web server — MAMP is it)
 ```
 
-Open http://localhost:8000
+Open https://oric-lms.local:8890
+
+Without `composer run dev` the site still works; it just serves the last `npm run build`
+output with no hot reload.
 
 | Login | Password |
 |---|---|
 | `admin@lms.test` | `password` |
 | `student@lms.test` | `password` |
-
-## Checks
-
-```sh
-./vendor/bin/pest      # 28 tests
-./vendor/bin/pint      # format
-npm run build          # production assets
-```
-
-## Reset the database
-
-```sh
-php artisan migrate:fresh --seed
-```
 
 ## pgAdmin
 
@@ -67,6 +59,11 @@ You will see both `lms` and `lms_test`. Don't edit `lms_test` by hand; every tes
 ## Notes
 
 - Two databases: `lms` (app) and `lms_test` (tests, wiped per run).
-- `php` is MAMP's 8.4.17 — it already has `pdo_pgsql`.
+- `php` is MAMP's 8.4.17 for both CLI and the vhost — same binary, no version skew.
+- Vite runs HTTPS on `oric-lms.local:5173` reusing MAMP's cert
+  (`/Applications/MAMP/Library/OpenSSL/certs/`). The site is HTTPS, so a plain-HTTP dev
+  server would be blocked as mixed content. If you rename the MAMP host, update `host` in
+  `vite.config.js` and `APP_URL` in `.env`.
+- MAMP's MySQL is unused. The database is Postgres.
 - Postgres CLI tools are not on `PATH`. Add if you want `psql`:
   `export PATH="/Applications/Postgres.app/Contents/Versions/17/bin:$PATH"`
