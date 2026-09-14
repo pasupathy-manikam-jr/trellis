@@ -60,6 +60,9 @@ class LearnController extends Controller
             'certificate' => $enrollment?->certificate()?->only('serial', 'issued_at'),
             'discussion' => $this->discussion($lesson, $user),
             'can_comment' => $user?->can('create', [LessonComment::class, $lesson]) ?? false,
+            // Whoever owns the course gets a way back to the editor from the
+            // lesson they are looking at, rather than hunting for it.
+            'can_manage' => $user?->can('manage', $course) ?? false,
         ]);
     }
 

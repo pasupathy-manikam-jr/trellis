@@ -7,7 +7,7 @@ import PublicLayout from '@/layouts/public-layout';
 import { duration } from '@/lib/format';
 import { type Course, type OutlineSection, type PlayerLesson, type PlayerQuiz, type Progress } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Award, CalendarClock, Check, Download, FileText, ListChecks, Lock, PenLine, Play } from 'lucide-react';
+import { Award, CalendarClock, Check, Download, FileText, ListChecks, Lock, Pencil, PenLine, Play } from 'lucide-react';
 
 const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks, assignment: PenLine };
 
@@ -22,6 +22,7 @@ type Props = {
     certificate: { serial: string; issued_at: string } | null;
     discussion: Question[];
     can_comment: boolean;
+    can_manage: boolean;
 };
 
 export default function LessonPlayer({
@@ -35,6 +36,7 @@ export default function LessonPlayer({
     certificate,
     discussion,
     can_comment,
+    can_manage,
 }: Props) {
     const flat = outline.flatMap((s) => s.lessons);
     const index = flat.findIndex((l) => l.id === lesson.id);
@@ -173,6 +175,14 @@ export default function LessonPlayer({
                     <div className="mb-4 flex flex-wrap items-center gap-2">
                         <h1 className="text-xl font-semibold">{lesson.title}</h1>
                         {lesson.is_preview && <Badge variant="secondary">Free preview</Badge>}
+
+                        {can_manage && (
+                            <Button asChild variant="outline" size="sm" className="ml-auto">
+                                <Link href={`/admin/courses/${course.slug}/edit`}>
+                                    <Pencil className="size-3.5" /> Edit
+                                </Link>
+                            </Button>
+                        )}
                     </div>
 
                     {lesson.video_url ? (

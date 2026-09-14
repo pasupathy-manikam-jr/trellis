@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { type SharedData } from '@/types';
-import { ArrowRight, Download, Eye, FileText, ListChecks, LoaderCircle, Lock, PenLine, Play } from 'lucide-react';
+import { ArrowRight, Download, Eye, FileText, ListChecks, LoaderCircle, Lock, Pencil, PenLine, Play } from 'lucide-react';
 
 const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks, assignment: PenLine };
 
@@ -48,9 +48,19 @@ export default function CourseShow({
         >
             <Head title={course.title} />
 
-            <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-                <Link href="/courses">← All courses</Link>
-            </Button>
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <Button asChild variant="ghost" size="sm" className="-ml-2">
+                    <Link href="/courses">← All courses</Link>
+                </Button>
+
+                {can_preview_all && (
+                    <Button asChild variant="outline" size="sm">
+                        <Link href={`/admin/courses/${course.slug}/edit`}>
+                            <Pencil className="size-3.5" /> Edit course
+                        </Link>
+                    </Button>
+                )}
+            </div>
 
             <div className="relative mb-8 isolate overflow-hidden rounded-2xl">
                 <div className="absolute inset-0 -z-10">

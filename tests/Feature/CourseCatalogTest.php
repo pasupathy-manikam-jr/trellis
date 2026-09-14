@@ -130,3 +130,18 @@ test('someone else cannot open up your lessons', function () {
 
     expect($lesson->fresh()->is_preview)->toBeFalse();
 });
+
+test('staff get a way into the editor from the course page and the player', function () {
+    $course = Course::factory()->published()->create();
+    $lesson = Lesson::factory()
+        ->for(Section::factory()->for($course))
+        ->create(['is_preview' => true]);
+
+    $this->actingAs($course->instructor)
+        ->get("/learn/{$course->slug}/{$lesson->id}")
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('can_manage', true));
+
+    // A learner reading the same preview gets no editing affordance.
+    $this->get("/learn/{$course->slug}/{$lesson->id}")
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('can_manage', false));
+});
