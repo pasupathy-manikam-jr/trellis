@@ -1,7 +1,7 @@
 import { Cards, HandbookPage, Notes, Prose, Section, Steps } from '@/components/handbook-parts';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { BookOpen, CalendarClock, CreditCard, ListChecks, Play, Search, Tag } from 'lucide-react';
+import { BookOpen, CalendarClock, CreditCard, Download, ListChecks, Lock, Play, Search, Tag } from 'lucide-react';
 
 const contents = [
     { href: '#find', label: 'Find a course' },
@@ -60,6 +60,7 @@ export default function LearnerHandbook() {
                                 icon: BookOpen,
                                 title: 'Sort',
                                 body: 'Newest, most enrolled, or best rated. Twelve results a page.',
+                                where: '/courses',
                             },
                         ]}
                     />
@@ -132,6 +133,16 @@ export default function LearnerHandbook() {
                                 icon: CalendarClock,
                                 title: 'Lessons that arrive over time',
                                 body: 'Some courses release lessons gradually. The clock starts the day you enrolled, not the day the course was published.',
+                            },
+                            {
+                                icon: Lock,
+                                title: 'Lessons that wait on another',
+                                body: 'A lesson may open only once you have finished an earlier one. The outline tells you which, rather than showing a bare padlock.',
+                            },
+                            {
+                                icon: Download,
+                                title: 'Downloads',
+                                body: 'Some lessons carry a worksheet or resource. It appears as a download button on the lesson, and is only yours once you are enrolled.',
                             },
                         ]}
                     />
@@ -237,8 +248,11 @@ export default function LearnerHandbook() {
                 >
                     <Prose>
                         <p>
-                            It appears in the player sidebar and on your dashboard, and downloads as a PDF. Each
-                            one carries a serial like{' '}
+                            It appears in the player sidebar and on{' '}
+                            <Link href="/dashboard" className="text-primary hover:underline">
+                                your dashboard
+                            </Link>
+                            , and downloads as a PDF. Each one carries a serial like{' '}
                             <code className="text-foreground">LMS-XXXX-XXXX-XXXX</code>.
                         </p>
                         <p>
@@ -265,6 +279,10 @@ export default function LearnerHandbook() {
                             [
                                 'Unmarked work does not drag your grade down.',
                                 'It is left out of the average entirely, rather than counted as zero.',
+                            ],
+                            [
+                                'A locked lesson tells you why.',
+                                'Either a date it opens, or the lesson you need to finish first — never an unexplained padlock.',
                             ],
                             [
                                 'Timed lessons count from the day you enrolled.',

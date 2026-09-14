@@ -78,6 +78,30 @@ gradebook — is done. See the note at the top of the log for what is left.
 
 ## Log
 
+### 2026-09-14 — downloads that download, and lessons that wait
+Two things: one a feature that never worked, one genuinely new.
+
+**The `download` lesson type was a facade.** It had an enum case, a place in the
+type picker, an icon, and an entry in *both* handbooks describing it as "for a
+worksheet or resource" — and no file upload, no storage, no route. Documenting
+something into existence is worse than leaving it out. It now takes a file on
+the private disk and serves it under the lesson's own policy.
+
+**Prerequisites** — a lesson can wait on another being finished. Moodle calls it
+restrict-access; it is the natural partner to drip, and it goes through the same
+`isOpenToLearner()`, so page, video, attachment and quiz are shut as one. The
+outline says *which* lesson you need rather than showing a bare padlock.
+
+Loops are refused by walking the chain on save. Worth knowing: the first version
+wrote the invalid value and *then* raised the error, because `requires_lesson_id`
+was in the mass-assigned data and the relational checks ran after. Caught by a
+test asserting the column was still null after a rejected save — the assertion
+that checks the write did not happen, not just that an error was returned.
+
+**Handbook links are now links.** Anything concrete enough to be a URL is
+clickable rather than a path to read and type. Pulled up on this fairly: telling
+someone to "go here and click that" is making them do the navigating.
+
 ### 2026-09-14 — question bank
 Questions were locked to one quiz, so a good question had to be rewritten for
 every quiz that wanted it. They now live in a course-level bank and quizzes

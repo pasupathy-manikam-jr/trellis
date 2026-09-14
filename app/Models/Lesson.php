@@ -22,7 +22,8 @@ class Lesson extends Model
 
     protected $fillable = [
         'section_id', 'slug', 'title', 'type', 'content',
-        'video_path', 'duration_sec', 'position', 'is_preview', 'drip_days',
+        'video_path', 'attachment_path', 'attachment_name',
+        'duration_sec', 'position', 'is_preview', 'drip_days', 'requires_lesson_id',
     ];
 
     protected function casts(): array
@@ -43,6 +44,34 @@ class Lesson extends Model
     public function quiz(): HasOne
     {
         return $this->hasOne(Quiz::class);
+    }
+
+    /** The lesson that must be finished before this one opens, if any. */
+    public function prerequisite(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'requires_lesson_id');
+    }
+
+    public function isDownload(): bool
+    {
+        return $this->type === LessonType::Download;
+    }
+
+    /**
+     * Whether this learner has cleared the prerequisite. A lesson with none is
+     * always clear; an unenrolled visitor never is, since nothing is recorded
+     * for them to have finished.
+     */
+    public function prerequisiteMetBy(?User $user): bool
+    {
+        if ($this->requires_lesson_id === null) {
+            return true;
+        }
+
+        return $user !== null && LessonCompletion::query()
+            ->where('user_id', $user->id)
+            ->where('lesson_id', $this->requires_lesson_id)
+            ->exists();
     }
 
     public function isQuiz(): bool

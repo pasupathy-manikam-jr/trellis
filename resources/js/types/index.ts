@@ -45,6 +45,8 @@ export interface Lesson {
     position: number;
     is_preview: boolean;
     drip_days: number;
+    requires_lesson_id?: number | null;
+    attachment_name?: string | null;
     quiz?: Quiz | null;
     assignment?: { instructions: string | null; points: number; due_days: number | null } | null;
 }
@@ -103,6 +105,8 @@ export interface OutlineLesson {
     completed: boolean;
     locked: boolean;
     unlocks_at: string | null;
+    /** Title of the lesson that must be finished first, when that is why it is shut. */
+    requires: string | null;
 }
 
 export interface OutlineSection {
@@ -121,6 +125,7 @@ export interface PlayerLesson {
     is_preview: boolean;
     completed: boolean;
     video_url: string | null;
+    attachment: { name: string; url: string } | null;
 }
 
 export interface Progress {

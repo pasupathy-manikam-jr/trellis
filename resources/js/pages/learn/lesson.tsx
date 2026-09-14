@@ -120,7 +120,11 @@ export default function LessonPlayer({
                                                     className={`size-4 shrink-0 ${item.completed ? 'text-emerald-600' : 'text-muted-foreground'}`}
                                                 />
                                                 <span className="flex-1 truncate">{item.title}</span>
-                                                {item.unlocks_at ? (
+                                                {item.requires ? (
+                                                    <span className="text-muted-foreground shrink-0 text-xs">
+                                                        after “{item.requires}”
+                                                    </span>
+                                                ) : item.unlocks_at ? (
                                                     <span className="text-muted-foreground shrink-0 text-xs">
                                                         {new Date(item.unlocks_at).toLocaleDateString(undefined, {
                                                             day: 'numeric',
@@ -147,9 +151,11 @@ export default function LessonPlayer({
                                                     <div
                                                         className={`${className} text-muted-foreground cursor-not-allowed`}
                                                         title={
-                                                            item.unlocks_at
-                                                                ? `Opens ${new Date(item.unlocks_at).toLocaleDateString()}`
-                                                                : 'Enrol to unlock'
+                                                            item.requires
+                                                                ? `Finish “${item.requires}” first`
+                                                                : item.unlocks_at
+                                                                  ? `Opens ${new Date(item.unlocks_at).toLocaleDateString()}`
+                                                                  : 'Enrol to unlock'
                                                         }
                                                     >
                                                         {inner}
@@ -200,6 +206,21 @@ export default function LessonPlayer({
                             No video uploaded yet.
                         </div>
                     ) : null}
+
+                    {lesson.attachment && (
+                        <a
+                            href={lesson.attachment.url}
+                            className="hover:border-primary/40 hover:bg-primary/5 mt-6 flex items-center gap-3 rounded-xl border p-4 transition-colors"
+                        >
+                            <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+                                <Download className="size-5" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-medium">{lesson.attachment.name}</span>
+                                <span className="text-muted-foreground text-xs">Click to download</span>
+                            </span>
+                        </a>
+                    )}
 
                     {lesson.content && (
                         <div className="mt-6 text-sm leading-relaxed whitespace-pre-wrap">{lesson.content}</div>

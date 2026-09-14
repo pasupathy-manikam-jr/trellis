@@ -19,7 +19,7 @@ import AppLayout from '@/layouts/app-layout';
 import { duration } from '@/lib/format';
 import { type BreadcrumbItem, type Course, type Lesson, type LessonType, type Section } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, ListChecks, LoaderCircle, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, ListChecks, LoaderCircle, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 const LESSON_TYPES: LessonType[] = ['text', 'video', 'download', 'quiz', 'assignment'];
@@ -216,6 +216,7 @@ function Details({ course, categories }: { course: Course; categories: AdminCate
 
 function Curriculum({ course, bank }: { course: Course; bank: BankQuestion[] }) {
     const sections = course.sections ?? [];
+    const allLessons = sections.flatMap((section) => section.lessons);
     const previewCount = sections.reduce(
         (n, section) => n + section.lessons.filter((lesson) => lesson.is_preview).length,
         0,
@@ -252,6 +253,7 @@ function Curriculum({ course, bank }: { course: Course; bank: BankQuestion[] }) 
                     key={section.id}
                     section={section}
                     bank={bank}
+                    allLessons={allLessons}
                     isFirst={i === 0}
                     isLast={i === sections.length - 1}
                 />
@@ -283,11 +285,13 @@ function Curriculum({ course, bank }: { course: Course; bank: BankQuestion[] }) 
 function SectionCard({
     section,
     bank,
+    allLessons,
     isFirst,
     isLast,
 }: {
     section: Section;
     bank: BankQuestion[];
+    allLessons: Lesson[];
     isFirst: boolean;
     isLast: boolean;
 }) {
@@ -363,6 +367,11 @@ function SectionCard({
                             {lesson.is_preview ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                             {lesson.is_preview ? 'preview' : 'private'}
                         </Button>
+                        {lesson.requires_lesson_id && (
+                            <Badge variant="outline" className="shrink-0 gap-1">
+                                <Lock className="size-3" /> gated
+                            </Badge>
+                        )}
                         {lesson.type === 'quiz' && (
                             <Button
                                 type="button"
@@ -398,6 +407,7 @@ function SectionCard({
                 <LessonDialog
                     section={section}
                     lesson={editing === 'new' ? null : editing}
+                    others={allLessons.filter((l) => editing === 'new' || l.id !== editing.id)}
                     onClose={() => setEditing(null)}
                 />
             )}
@@ -408,10 +418,13 @@ function SectionCard({
 function LessonDialog({
     section,
     lesson,
+    others,
     onClose,
 }: {
     section: Section;
     lesson: Lesson | null;
+    /** Every other lesson in the course, for the "opens after" picker. */
+    others: Lesson[];
     onClose: () => void;
 }) {
     const { data, setData, post, processing, errors } = useForm<{
@@ -422,6 +435,8 @@ function LessonDialog({
         duration_sec: number | string;
         is_preview: boolean;
         drip_days: number | string;
+        requires_lesson_id: number | string;
+        attachment: File | null;
         assignment: { instructions: string; points: number | string; due_days: number | string };
         video: File | null;
         _method?: string;
@@ -433,7 +448,9 @@ function LessonDialog({
         duration_sec: lesson?.duration_sec ?? '',
         is_preview: lesson?.is_preview ?? false,
         drip_days: lesson?.drip_days ?? 0,
+        requires_lesson_id: lesson?.requires_lesson_id ?? '',
         video: null,
+        attachment: null,
         assignment: {
             instructions: lesson?.assignment?.instructions ?? '',
             points: lesson?.assignment?.points ?? 100,
@@ -518,6 +535,49 @@ function LessonDialog({
                             </p>
                         </Field>
                     )}
+
+                    {data.type === 'download' && (
+                        <Field label="The file" error={errors.attachment}>
+                            {lesson?.attachment_name && !data.attachment && (
+                                <p className="text-muted-foreground text-xs">
+                                    Currently attached: {lesson.attachment_name}. Choosing a new file
+                                    replaces it.
+                                </p>
+                            )}
+                            <Input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.odt,.xlsx,.csv,.txt,.md,.zip,.png,.jpg,.jpeg"
+                                onChange={(e) => setData('attachment', e.target.files?.[0] ?? null)}
+                            />
+                            <p className="text-muted-foreground text-xs">
+                                Stored privately and served through the same check as the lesson. Max 50 MB.
+                            </p>
+                        </Field>
+                    )}
+
+                    <Field label="Opens after" error={nested['requires_lesson_id'] ?? errors.requires_lesson_id}>
+                        <select
+                            value={data.requires_lesson_id}
+                            onChange={(e) =>
+                                setData(
+                                    'requires_lesson_id',
+                                    e.target.value === '' ? '' : Number(e.target.value),
+                                )
+                            }
+                            className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                        >
+                            <option value="">Available straight away</option>
+                            {others.map((other) => (
+                                <option key={other.id} value={other.id}>
+                                    {other.title}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-muted-foreground text-xs">
+                            The learner must finish that lesson before this one opens. Counted per
+                            learner, alongside any unlock-after days.
+                        </p>
+                    </Field>
 
                     {data.type === 'assignment' && (
                         <div className="grid gap-4 rounded-lg border p-3">

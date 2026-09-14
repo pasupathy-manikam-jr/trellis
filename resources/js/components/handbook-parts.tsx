@@ -1,5 +1,6 @@
 import PublicLayout from '@/layouts/public-layout';
 import { Link } from '@inertiajs/react';
+import { ArrowUpRight } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 
 type Tone = 'learner' | 'admin' | 'note';
@@ -119,7 +120,19 @@ export function Cards({
                         {title}
                     </h3>
                     <p className="text-muted-foreground mt-1.5 text-sm">{body}</p>
-                    {where && <code className="text-muted-foreground mt-2 block text-xs">{where}</code>}
+                    {where &&
+                        // A path you have to go and type is not help. Anything
+                        // concrete enough to be a real URL is a link.
+                        (where.startsWith('/') && !where.includes('<') ? (
+                            <Link
+                                href={where}
+                                className="text-primary mt-2 inline-flex items-center gap-1 text-xs hover:underline"
+                            >
+                                Open {where} <ArrowUpRight className="size-3" />
+                            </Link>
+                        ) : (
+                            <code className="text-muted-foreground mt-2 block text-xs">{where}</code>
+                        ))}
                 </div>
             ))}
         </div>

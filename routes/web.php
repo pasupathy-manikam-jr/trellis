@@ -19,6 +19,7 @@ use App\Http\Controllers\Checkout\PaymentCallbackController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearnController;
+use App\Http\Controllers\LessonAttachmentController;
 use App\Http\Controllers\LessonCommentController;
 use App\Http\Controllers\LessonCompletionController;
 use App\Http\Controllers\LessonVideoController;
@@ -39,6 +40,7 @@ Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses
 // Preview lessons are reachable by guests; the policy decides, not the route.
 Route::get('learn/{course}/{lesson}', [LearnController::class, 'lesson'])->name('learn.lesson');
 Route::get('lessons/{lesson}/video', [LessonVideoController::class, 'show'])->name('lessons.video');
+Route::get('lessons/{lesson}/attachment', [LessonAttachmentController::class, 'show'])->name('lessons.attachment');
 Route::get('verify/{serial}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
 Route::middleware(['auth'])->group(function () {

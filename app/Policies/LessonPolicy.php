@@ -54,14 +54,17 @@ class LessonPolicy
     }
 
     /**
-     * Enrolled *and* past the drip date. Every learner-facing rule goes through
-     * here, so a dripped lesson is shut to the page, the video and the quiz alike.
+     * Enrolled, past the drip date, and through whatever this lesson depends on.
+     * Every learner-facing rule goes through here, so a lesson that is not yet
+     * open is shut to the page, its video, its attachment and its quiz alike.
      */
     private function isOpenToLearner(?User $user, Lesson $lesson): bool
     {
         $enrollment = $lesson->section->course->enrollmentFor($user);
 
-        return $enrollment !== null && $lesson->isUnlockedFor($enrollment);
+        return $enrollment !== null
+            && $lesson->isUnlockedFor($enrollment)
+            && $lesson->prerequisiteMetBy($user);
     }
 
     private function isStaff(?User $user, Course $course): bool

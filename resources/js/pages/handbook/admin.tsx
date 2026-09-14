@@ -1,13 +1,14 @@
 import { Cards, HandbookPage, Notes, Section, Steps } from '@/components/handbook-parts';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { BookOpen, FileText, ListChecks, PenLine, Play, Receipt, Tag, Ticket, Users } from 'lucide-react';
+import { BookOpen, FileText, ListChecks, Lock, PenLine, Play, Receipt, Tag, Ticket, Users } from 'lucide-react';
 
 const contents = [
     { href: '#roles', label: 'Who can do what' },
     { href: '#build', label: 'Build a course' },
     { href: '#lessons', label: 'Lesson types' },
     { href: '#timing', label: 'Releasing over time' },
+    { href: '#bank', label: 'The question bank' },
     { href: '#grading', label: 'Grading' },
     { href: '#learners', label: 'Your learners' },
     { href: '#money', label: 'Money and taxonomy' },
@@ -146,7 +147,7 @@ export default function AdminHandbook() {
                             {
                                 icon: BookOpen,
                                 title: 'Download',
-                                body: 'For a worksheet or resource alongside the written content.',
+                                body: 'Attach a worksheet or resource — PDF, doc, spreadsheet, zip, image, up to 50 MB. Stored privately and served through the same check as the lesson, so it is not a link that can be passed around.',
                             },
                             {
                                 icon: ListChecks,
@@ -188,6 +189,32 @@ export default function AdminHandbook() {
                         per learner when the page loads. Learners see a calendar icon and the date on anything
                         not yet open.
                     </p>
+
+                    <h3 className="mt-8 font-semibold">Or wait on another lesson</h3>
+                    <Cards
+                        items={[
+                            {
+                                icon: Lock,
+                                title: '“Opens after”',
+                                body: 'In the lesson dialog, pick a lesson that must be finished first. The learner sees “after that lesson” rather than an unexplained padlock.',
+                            },
+                            {
+                                icon: ListChecks,
+                                title: 'It stacks with timing',
+                                body: 'A lesson can wait on both a date and another lesson. Both must clear before it opens.',
+                            },
+                            {
+                                icon: PenLine,
+                                title: 'Loops are refused',
+                                body: 'Two lessons cannot be made to wait on each other, however long the chain — that would lock both forever, so it is rejected when you save.',
+                            },
+                            {
+                                icon: BookOpen,
+                                title: 'Deleting is safe',
+                                body: 'Remove a lesson others were waiting on and they simply open, rather than being deleted with it.',
+                            },
+                        ]}
+                    />
                 </Section>
 
                 <Section
@@ -226,6 +253,43 @@ export default function AdminHandbook() {
                         have not marked yet is left out rather than counted as zero, so nobody reads 0%
                         just because you are behind. Quizzes are scored out of 100 and keep the learner's
                         best attempt.
+                    </p>
+                </Section>
+
+                <Section
+                    id="bank"
+                    eyebrow="Reuse"
+                    tone="admin"
+                    title="The question bank"
+                    lede="Questions belong to the course, not to the quiz that happened to need them first."
+                >
+                    <Cards
+                        items={[
+                            {
+                                icon: ListChecks,
+                                title: 'Written once, used anywhere',
+                                body: 'A question can sit in a practice quiz and the final at the same time. Editing it changes both.',
+                            },
+                            {
+                                icon: PenLine,
+                                title: 'It fills itself',
+                                body: 'Anything you write inside a quiz builder lands in the bank automatically. Nothing to curate up front.',
+                            },
+                            {
+                                icon: BookOpen,
+                                title: 'Remove is not delete',
+                                body: 'Taking a question out of a quiz leaves it in the bank. Deleting from the bank removes it from every quiz — the dialog says which ones first.',
+                            },
+                            {
+                                icon: Tag,
+                                title: 'Categories',
+                                body: 'Folders for the bank. Removing one leaves its questions unfiled rather than deleting them.',
+                            },
+                        ]}
+                    />
+                    <p className="text-muted-foreground mt-4 max-w-prose text-sm">
+                        Open it from <strong className="text-foreground">Question bank</strong> in the course
+                        editor, beside Gradebook.
                     </p>
                 </Section>
 
@@ -316,6 +380,10 @@ export default function AdminHandbook() {
                             [
                                 'Coursework is never a public URL.',
                                 'Like lesson video, a submitted file is served through a check. Only its author and you can open it.',
+                            ],
+                            [
+                                'A lesson download is gated the same way.',
+                                'Attachments sit on the private disk and follow the lesson\u2019s own rules, so a worksheet for paying learners does not leak through a copied link.',
                             ],
                             [
                                 'Deleting a category never deletes courses.',

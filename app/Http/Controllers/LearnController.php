@@ -36,7 +36,7 @@ class LearnController extends Controller
 
         $this->authorize('view', $lesson);
 
-        $lesson->load('quiz', 'assignment');
+        $lesson->load('quiz', 'assignment', 'prerequisite:id,title');
 
         $user = $request->user();
         $enrollment = $course->enrollmentFor($user);
@@ -45,12 +45,16 @@ class LearnController extends Controller
 
         return Inertia::render('learn/lesson', [
             'course' => $course->only('id', 'slug', 'title'),
-            'outline' => $this->outline($course, $completedIds, $enrollment, $isStaff),
+            'outline' => $this->outline($course, $completedIds, $enrollment, $isStaff, $user),
             // Only the lesson the policy just cleared carries a body or a video URL.
             'lesson' => [
                 ...$lesson->only('id', 'slug', 'title', 'type', 'content', 'duration_sec', 'is_preview'),
                 'completed' => in_array($lesson->id, $completedIds, true),
                 'video_url' => $lesson->video_path ? route('lessons.video', $lesson) : null,
+                'attachment' => $lesson->attachment_path ? [
+                    'name' => $lesson->attachment_name,
+                    'url' => route('lessons.attachment', $lesson),
+                ] : null,
             ],
             'quiz' => $this->quizPayload($lesson, $user),
             'assignment' => $this->assignmentPayload($lesson, $user, $enrollment),
@@ -183,21 +187,26 @@ class LearnController extends Controller
      *
      * @param  list<int>  $completedIds
      */
-    private function outline(Course $course, array $completedIds, ?Enrollment $enrollment, bool $isStaff): array
+    private function outline(Course $course, array $completedIds, ?Enrollment $enrollment, bool $isStaff, ?User $user): array
     {
-        return $course->sections()->with('lessons')->get()
+        return $course->sections()->with('lessons.prerequisite:id,title')->get()
             ->map(fn ($section) => [
                 'id' => $section->id,
                 'title' => $section->title,
-                'lessons' => $section->lessons->map(function (Lesson $l) use ($completedIds, $enrollment, $isStaff) {
+                'lessons' => $section->lessons->map(function (Lesson $l) use ($completedIds, $enrollment, $isStaff, $user) {
                     $dripped = ! $isStaff && ! $l->isUnlockedFor($enrollment);
+                    $blocked = ! $isStaff && $enrollment !== null && ! $l->prerequisiteMetBy($user);
 
                     return [
                         ...$l->only('id', 'slug', 'title', 'type', 'duration_sec', 'is_preview'),
                         'completed' => in_array($l->id, $completedIds, true),
-                        'locked' => $isStaff ? false : (($enrollment === null && ! $l->is_preview) || $dripped),
+                        'locked' => $isStaff
+                            ? false
+                            : (($enrollment === null && ! $l->is_preview) || $dripped || $blocked),
                         // Shown as "opens on ..." rather than a bare padlock.
                         'unlocks_at' => $dripped && $enrollment ? $l->unlocksAt($enrollment) : null,
+                        // And "finish X first" rather than an unexplained one.
+                        'requires' => $blocked ? $l->prerequisite?->title : null,
                     ];
                 })->all(),
             ])->all();

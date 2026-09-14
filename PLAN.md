@@ -145,6 +145,24 @@ hand.
 **Drip:** `lessons.drip_days` = days after `enrollments.started_at` before unlock.
 One integer. No cron, no scheduler — compute on read.
 
+**Downloads:** `lessons.attachment_path` / `attachment_name`, on the **private**
+disk beside video and served by `LessonAttachmentController` under the same
+`LessonPolicy@view`. A worksheet bought by paying learners is not something to
+hand out on a public URL. The `download` type shipped in Phase 1 with no file
+handling at all — an enum case, an icon and a handbook entry describing a
+feature that held nothing.
+
+**Prerequisites:** `lessons.requires_lesson_id`, self-referencing and nulled on
+delete, so removing a lesson others waited on opens them rather than deleting
+them too. Enforced in the same `isOpenToLearner()` as drip, which means the
+page, the video, the attachment and the quiz are all shut together.
+
+Loops are refused on save, by walking the chain from the proposed prerequisite
+back — two lessons waiting on each other would lock both forever. The check is
+relational rather than a validation rule, and the field is deliberately kept out
+of the mass-assigned data: letting it through wrote the bad value first and
+raised the error afterwards.
+
 **Video:** `lessons.video_path` points at the **private** disk (`storage/app/private/videos`).
 Served through `LessonVideoController`, which applies the same `LessonPolicy@view` as the
 lesson page. `storage/app/public` is symlinked into `public/` — anything there is fetchable
