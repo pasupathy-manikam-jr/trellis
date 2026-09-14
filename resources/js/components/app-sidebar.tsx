@@ -55,13 +55,19 @@ export function AppSidebar() {
                     : [],
         },
         {
-            label: staff ? 'Your own learning' : 'Learning',
-            items: [
-                { title: 'My courses', url: '/dashboard', icon: LayoutGrid },
-                { title: 'Browse catalogue', url: '/courses', icon: Library },
-                { title: 'My orders', url: '/orders', icon: Receipt },
-                ...(staff ? [] : [{ title: 'Handbook', url: '/handbook', icon: BookOpen }]),
-            ],
+            // An admin runs the platform; they do not take courses, so none of
+            // this is theirs. Instructors keep it — they may well be learners
+            // on someone else's course.
+            label: role === 'admin' ? 'Catalogue' : role === 'instructor' ? 'Your own learning' : 'Learning',
+            items:
+                role === 'admin'
+                    ? [{ title: 'Catalogue', url: '/courses', icon: Library }]
+                    : [
+                          { title: 'My courses', url: '/dashboard', icon: LayoutGrid },
+                          { title: 'Browse catalogue', url: '/courses', icon: Library },
+                          { title: 'My orders', url: '/orders', icon: Receipt },
+                          ...(staff ? [] : [{ title: 'Handbook', url: '/handbook', icon: BookOpen }]),
+                      ],
         },
     ];
 

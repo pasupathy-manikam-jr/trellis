@@ -164,3 +164,16 @@ test('an instructor cannot promote anyone', function () {
 
     expect($learner->fresh()->role)->toBe(UserRole::Student);
 });
+
+test('an admin lands on their workspace rather than a learner dashboard', function () {
+    $admin = User::factory()->create(['role' => UserRole::Admin]);
+
+    // Covers every way in: signing in, registering, verifying an email, an old
+    // bookmark — they all end at /dashboard.
+    $this->actingAs($admin)->get('/dashboard')->assertRedirect('/admin/courses');
+});
+
+test('instructors and learners keep their dashboard', function () {
+    $this->actingAs($this->teacher)->get('/dashboard')->assertOk();
+    $this->actingAs(User::factory()->create())->get('/dashboard')->assertOk();
+});
