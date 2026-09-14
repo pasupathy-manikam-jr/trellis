@@ -20,6 +20,7 @@ type Props = {
     can_purchase: boolean;
     can_review: boolean;
     reviews: ReviewSummary;
+    can_preview_all: boolean;
 };
 
 export default function CourseShow({
@@ -29,6 +30,7 @@ export default function CourseShow({
     can_purchase,
     can_review,
     reviews,
+    can_preview_all,
 }: Props) {
     const sections = course.sections ?? [];
     const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
@@ -96,7 +98,7 @@ export default function CourseShow({
                                         return (
                                             <li key={lesson.id} className="flex items-center gap-3 px-4 py-2 text-sm">
                                                 <Icon className="text-muted-foreground size-4 shrink-0" />
-                                                {enrolled || lesson.is_preview ? (
+                                                {enrolled || can_preview_all || lesson.is_preview ? (
                                                     <Link
                                                         href={`/learn/${course.slug}/${lesson.id}`}
                                                         className="flex-1 truncate hover:underline"

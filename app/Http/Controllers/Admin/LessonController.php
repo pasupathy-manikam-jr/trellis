@@ -67,6 +67,18 @@ class LessonController extends Controller
         }
     }
 
+    /** Flips whether a lesson is readable without enrolling. */
+    public function togglePreview(Lesson $lesson): RedirectResponse
+    {
+        $this->authorize('manage', $lesson->course());
+
+        $lesson->update(['is_preview' => ! $lesson->is_preview]);
+
+        return back()->with('success', $lesson->is_preview
+            ? "“{$lesson->title}” is now a free preview."
+            : "“{$lesson->title}” is no longer a preview.");
+    }
+
     public function move(Request $request, Lesson $lesson): RedirectResponse
     {
         $this->authorize('manage', $lesson->course());

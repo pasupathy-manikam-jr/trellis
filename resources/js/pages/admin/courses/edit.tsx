@@ -19,7 +19,7 @@ import AppLayout from '@/layouts/app-layout';
 import { duration } from '@/lib/format';
 import { type BreadcrumbItem, type Course, type Lesson, type LessonType, type Section } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Eye, ExternalLink, ListChecks, LoaderCircle, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, EyeOff, ExternalLink, ListChecks, LoaderCircle, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 const LESSON_TYPES: LessonType[] = ['text', 'video', 'download', 'quiz', 'assignment'];
@@ -211,6 +211,10 @@ function Details({ course, categories }: { course: Course; categories: AdminCate
 
 function Curriculum({ course }: { course: Course }) {
     const sections = course.sections ?? [];
+    const previewCount = sections.reduce(
+        (n, section) => n + section.lessons.filter((lesson) => lesson.is_preview).length,
+        0,
+    );
     const { data, setData, post, processing, errors, reset } = useForm({ title: '' });
 
     return (
@@ -219,9 +223,18 @@ function Curriculum({ course }: { course: Course }) {
                 <h2 className="font-semibold">Curriculum</h2>
                 <p className="text-muted-foreground text-sm">
                     {sections.length} section{sections.length === 1 ? '' : 's'} ·{' '}
-                    {sections.reduce((n, s) => n + s.lessons.length, 0)} lessons
+                    {sections.reduce((n, s) => n + s.lessons.length, 0)} lessons ·{' '}
+                    {previewCount} free preview{previewCount === 1 ? '' : 's'}
                 </p>
             </div>
+
+            {previewCount === 0 && sections.some((s) => s.lessons.length > 0) && (
+                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+                    Nothing in this course is readable without enrolling, so a visitor has no way to
+                    judge it. Mark a lesson <strong>preview</strong> below — a strong one that stands on
+                    its own.
+                </p>
+            )}
 
             {sections.map((section, i) => (
                 <SectionCard
@@ -300,11 +313,23 @@ function SectionCard({ section, isFirst, isLast }: { section: Section; isFirst: 
                                 {duration(lesson.duration_sec)}
                             </span>
                         )}
-                        {lesson.is_preview && (
-                            <Badge variant="secondary" className="shrink-0">
-                                <Eye className="size-3" /> preview
-                            </Badge>
-                        )}
+                        <Button
+                            type="button"
+                            variant={lesson.is_preview ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className={`shrink-0 ${lesson.is_preview ? '' : 'text-muted-foreground'}`}
+                            title={
+                                lesson.is_preview
+                                    ? 'Readable without enrolling — click to close it'
+                                    : 'Open this lesson to everyone as a free preview'
+                            }
+                            onClick={() =>
+                                router.patch(`/admin/lessons/${lesson.id}/preview`, {}, { preserveScroll: true })
+                            }
+                        >
+                            {lesson.is_preview ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                            {lesson.is_preview ? 'preview' : 'private'}
+                        </Button>
                         {lesson.type === 'quiz' && (
                             <Button
                                 type="button"
@@ -517,7 +542,7 @@ function LessonDialog({
                             rows={8}
                             value={data.content}
                             onChange={(e) => setData('content', e.target.value)}
-                            placeholder="Lesson body. Video upload lands in Phase 2."
+                            placeholder="The written part of the lesson."
                         />
                     </Field>
 

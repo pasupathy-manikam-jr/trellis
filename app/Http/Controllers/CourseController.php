@@ -113,6 +113,9 @@ class CourseController extends Controller
             'progress' => $enrollment?->progress(),
             'can_purchase' => $request->user()?->can('purchase', $course) ?? false,
             'can_review' => $request->user() !== null && $enrollment !== null,
+            // Staff may open any lesson in a course they own, so the outline
+            // should let them click through rather than only showing previews.
+            'can_preview_all' => $request->user()?->can('manage', $course) ?? false,
             'reviews' => [
                 // null, not 0 — an unrated course has no score, it does not score zero.
                 'average' => $reviews->isEmpty() ? null : round((float) $reviews->avg('rating'), 1),

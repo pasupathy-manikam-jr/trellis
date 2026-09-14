@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Section;
+use App\Models\User;
 use Inertia\Testing\AssertableInertia;
 
 test('the catalog lists only published courses', function () {
@@ -75,4 +77,56 @@ test('the splash page shows at most three courses', function () {
     Course::factory()->count(5)->published()->create();
 
     $this->get('/')->assertInertia(fn (AssertableInertia $page) => $page->has('courses', 3));
+});
+
+test('a preview lesson can be opened straight from the course page by anyone', function () {
+    $course = Course::factory()->published()->create();
+    $section = Section::factory()->for($course)->create();
+    $preview = Lesson::factory()->for($section)->create(['is_preview' => true]);
+    Lesson::factory()->for($section)->create(['is_preview' => false]);
+
+    $this->get("/courses/{$course->slug}")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('course.sections.0.lessons.0.is_preview', true)
+            ->where('can_preview_all', false)
+        );
+
+    $this->get("/learn/{$course->slug}/{$preview->id}")->assertOk();
+});
+
+test('the course owner may click into any lesson, not just previews', function () {
+    $course = Course::factory()->published()->create();
+    Lesson::factory()->for(Section::factory()->for($course))->create();
+
+    $this->actingAs($course->instructor)
+        ->get("/courses/{$course->slug}")
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('can_preview_all', true));
+});
+
+test('toggling preview from the editor flips it both ways', function () {
+    $course = Course::factory()->create();
+    $lesson = Lesson::factory()
+        ->for(Section::factory()->for($course))
+        ->create(['is_preview' => false]);
+
+    $this->actingAs($course->instructor)
+        ->patch("/admin/lessons/{$lesson->id}/preview")
+        ->assertRedirect();
+
+    expect($lesson->fresh()->is_preview)->toBeTrue();
+
+    $this->actingAs($course->instructor)->patch("/admin/lessons/{$lesson->id}/preview");
+
+    expect($lesson->fresh()->is_preview)->toBeFalse();
+});
+
+test('someone else cannot open up your lessons', function () {
+    $lesson = Lesson::factory()->create();
+
+    $this->actingAs(User::factory()->create(['role' => UserRole::Instructor]))
+        ->patch("/admin/lessons/{$lesson->id}/preview")
+        ->assertForbidden();
+
+    expect($lesson->fresh()->is_preview)->toBeFalse();
 });

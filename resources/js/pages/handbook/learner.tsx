@@ -81,7 +81,7 @@ export default function LearnerHandbook() {
                         items={[
                             {
                                 title: 'Read a preview first',
-                                body: 'Lessons marked “Free preview” are readable without an account. The rest show as locked.',
+                                body: 'Lessons badged “preview” on the course page are readable in full without an account — click the title to open one. The rest are listed but not clickable.',
                             },
                             {
                                 title: 'Free courses take one click',

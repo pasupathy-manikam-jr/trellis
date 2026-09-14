@@ -92,6 +92,7 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
     Route::post('sections/{section}/lessons', [LessonController::class, 'store'])->name('lessons.store');
     Route::patch('lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
     Route::patch('lessons/{lesson}/move', [LessonController::class, 'move'])->name('lessons.move');
+    Route::patch('lessons/{lesson}/preview', [LessonController::class, 'togglePreview'])->name('lessons.preview');
     Route::delete('lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
 
     Route::post('lessons/{lesson}/quiz', [QuizController::class, 'store'])->name('quizzes.store');

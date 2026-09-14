@@ -115,7 +115,7 @@ export default function AdminHandbook() {
                             },
                             {
                                 title: 'Mark a preview or two',
-                                body: 'Tick “Free preview” on a lesson to open it to everyone. This is what sells the course, so pick something that stands alone.',
+                                body: 'Each lesson row in the editor has a private / preview button — click it to open that lesson to everyone. This is what sells the course, so pick something that stands on its own. The editor warns you when a course has none.',
                             },
                             {
                                 title: 'Publish',
