@@ -11,15 +11,16 @@ See [PLAN.md](PLAN.md) for scope and phases, [PROGRESS.md](PROGRESS.md) for stat
 Served by **MAMP PRO** at https://oric-lms.local:8890 (vhost doc root → `public/`, PHP 8.4.17).
 Apache runs on its own; you do not start it.
 
-Postgres does *not* start on boot. Once per reboot:
+Postgres starts at login, supervised by launchd
+(`~/Library/LaunchAgents/com.oric.postgres-17.plist`). It runs the server binary
+directly rather than `pg_ctl`, which daemonises and exits — launchd would read
+that as a crash. `KeepAlive` restarts it if it ever dies.
 
 ```sh
-"/Applications/Postgres.app/Contents/Versions/17/bin/pg_ctl" \
-  -D "$HOME/Library/Application Support/Postgres/var-17" \
-  -l "$HOME/Library/Application Support/Postgres/var-17/server.log" start
+launchctl kickstart -k gui/$(id -u)/com.oric.postgres-17   # restart it
+launchctl bootout gui/$(id -u)/com.oric.postgres-17        # stop it for good
+tail -f ~/Library/Logs/postgres-17.log                     # what it is doing
 ```
-
-(Or open Postgres.app once — it adopts the same data directory and gives you a menubar toggle.)
 
 Then, for hot reload while developing:
 
