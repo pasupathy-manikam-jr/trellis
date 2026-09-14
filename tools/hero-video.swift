@@ -58,7 +58,11 @@ func climb(_ u: Double, _ t: Double, width: Double = 0.20) -> CGFloat {
 }
 
 /// Height up the page, 0 at the bottom.
-func up(_ y: CGFloat) -> Double { Double((h - y) / h) }
+///
+/// This bitmap context puts y = 0 at the bottom of the rendered frame, so
+/// "up" is simply increasing y. Getting this backwards made the light fall
+/// down the trellis instead of climbing it.
+func up(_ y: CGFloat) -> Double { Double(y / h) }
 
 for frame in 0..<frameCount {
     let t = Double(frame) / Double(frameCount)
@@ -148,12 +152,12 @@ for frame in 0..<frameCount {
         let offset: CGFloat = row.isMultiple(of: 2) ? 0 : spacing / 2
         var nx = offset - spacing
         while nx < w + spacing {
-            let glow = climb(up(ny), t, width: 0.15)
+            let glow = climb(up(ny), t, width: 0.13)
 
             if glow > 0.015 {
-                let r = 2.0 + 13 * glow
+                let r = 2.2 + 17 * glow
                 let g = CGGradient(colorsSpace: space, colors: [
-                    CGColor(red: 0.80, green: 1.0, blue: 0.94, alpha: 0.05 + 0.34 * glow),
+                    CGColor(red: 0.82, green: 1.0, blue: 0.95, alpha: 0.05 + 0.52 * glow),
                     CGColor(red: 0.40, green: 0.92, blue: 0.88, alpha: 0),
                 ] as CFArray, locations: [0, 1])!
                 ctx.drawRadialGradient(g, startCenter: CGPoint(x: nx, y: ny), startRadius: 0,

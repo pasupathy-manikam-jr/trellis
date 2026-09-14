@@ -19,6 +19,11 @@ swiftc -O tools/hero-video.swift -o /tmp/herogen && /tmp/herogen public/hero.mp4
 14s, 1600x900, 24fps, ~2.9 MB. Motion is driven by whole multiples of 2π, so the
 last frame flows back into the first and the loop does not jump.
 
+This bitmap context has **y = 0 at the bottom** of the rendered frame, so "up
+the page" is increasing y. Getting that backwards makes the light fall down the
+trellis instead of climbing it, which inverts the whole meaning — check a couple
+of frames after any change to `up()`.
+
 Keep it dark and keep the band soft: the hero carries white text over the lower
 left, and everything blends additively, which blows out fast. A tight, bright
 band reads as chase lights rather than growth — `sweeps`, the `width` arguments
