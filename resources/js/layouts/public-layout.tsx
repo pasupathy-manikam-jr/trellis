@@ -17,6 +17,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         Trellis
                     </Link>
 
+                    <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
+                        <Link href="/handbook">Handbook</Link>
+                    </Button>
+
                     <div className="ml-auto flex items-center gap-2">
                         {auth.user ? (
                             <>

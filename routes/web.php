@@ -24,8 +24,11 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', [CourseController::class, 'home'])->name('home');
+
+Route::get('handbook', fn () => Inertia::render('handbook'))->name('handbook');
 
 Route::get('courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('courses/{course}', [CourseController::class, 'show'])->name('courses.show');

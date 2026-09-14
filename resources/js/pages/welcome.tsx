@@ -219,6 +219,9 @@ export default function Welcome({ courses, hero_image, hero_video, stats }: Prop
                         <Link href="/courses" className="hover:text-foreground">
                             Courses
                         </Link>
+                        <Link href="/handbook" className="hover:text-foreground">
+                            Handbook
+                        </Link>
                         <span className="ml-auto text-xs">Verify a certificate at /verify/&lt;serial&gt;</span>
                     </div>
                 </footer>

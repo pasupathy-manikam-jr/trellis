@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChartNoAxesColumn, GraduationCap, LayoutGrid, Library, Receipt, Tag, Ticket, Users } from 'lucide-react';
+import { BookOpen, ChartNoAxesColumn, GraduationCap, LayoutGrid, Library, Receipt, Tag, Ticket, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -21,6 +21,7 @@ export function AppSidebar() {
         ...mainNavItems,
         { title: 'Browse courses', url: '/courses', icon: Library },
         { title: 'My orders', url: '/orders', icon: Receipt },
+        { title: 'Handbook', url: '/handbook', icon: BookOpen },
         // Instructors get the course workspace; the rest stays with admins.
         ...(auth.user?.role === 'admin' || auth.user?.role === 'instructor'
             ? [
