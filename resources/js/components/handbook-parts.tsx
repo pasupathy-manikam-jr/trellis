@@ -38,11 +38,6 @@ export function HandbookPage({
                         {eyebrow}
                     </span>
                     <h1 className="mt-2 text-3xl font-bold tracking-tight">{title}</h1>
-                    <div
-                        className={`mt-4 h-1 w-16 rounded-full ${
-                            tone === 'admin' ? 'bg-amber-500' : 'bg-primary'
-                        }`}
-                    />
                     <p className="text-muted-foreground mt-4 max-w-prose">{lede}</p>
                 </div>
 

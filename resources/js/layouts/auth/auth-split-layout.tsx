@@ -52,7 +52,6 @@ export default function AuthSplitLayout({ children, title, description }: AuthLa
                     <h2 className="text-3xl font-bold tracking-tight text-balance">
                         Structured courses, finished properly.
                     </h2>
-                    <div className="mt-5 h-1 w-16 rounded-full bg-white/50" />
 
                     <ul className="mt-8 flex flex-col gap-4">
                         {points.map(({ icon: Icon, text, tint }) => (
@@ -87,7 +86,6 @@ export default function AuthSplitLayout({ children, title, description }: AuthLa
                         {description && (
                             <p className="text-muted-foreground mt-2 text-sm text-pretty">{description}</p>
                         )}
-                        <div className="bg-primary mt-4 h-1 w-12 rounded-full" />
                     </div>
 
                     {children}

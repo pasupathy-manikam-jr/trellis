@@ -91,7 +91,6 @@ export default function Welcome({ courses, hero_image, hero_video, stats }: Prop
                                     Learn something properly.
                                 </h1>
 
-                                <div className="bg-primary mt-6 h-1 w-20 rounded-full" />
 
                                 <p className="mt-6 max-w-xl text-lg text-pretty text-white/80">
                                     Structured courses with real assessment at the end — not a folder of videos.
@@ -142,7 +141,6 @@ export default function Welcome({ courses, hero_image, hero_video, stats }: Prop
                                     Available now
                                 </span>
                                 <h2 className="mt-2 text-3xl font-bold tracking-tight">Popular courses</h2>
-                                <div className="bg-primary mx-auto mt-4 h-1 w-16 rounded-full" />
                             </div>
 
                             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,7 +165,6 @@ export default function Welcome({ courses, hero_image, hero_video, stats }: Prop
                                     How it works
                                 </span>
                                 <h2 className="mt-2 text-3xl font-bold tracking-tight">Built to be finished</h2>
-                                <div className="bg-primary mx-auto mt-4 h-1 w-16 rounded-full" />
                             </div>
 
                             <div className="grid gap-8 sm:grid-cols-3">

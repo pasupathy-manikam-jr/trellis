@@ -18,7 +18,6 @@ export function PageHeader({
     tone?: 'primary' | 'amber';
 }) {
     const accent = tone === 'amber' ? 'text-amber-600 dark:text-amber-400' : 'text-primary';
-    const rule = tone === 'amber' ? 'bg-amber-500' : 'bg-primary';
 
     return (
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -27,7 +26,6 @@ export function PageHeader({
                     {eyebrow}
                 </span>
                 <h1 className="mt-1.5 text-2xl font-bold tracking-tight">{title}</h1>
-                <div className={`mt-3 h-1 w-12 rounded-full ${rule}`} />
                 {lede && <p className="text-muted-foreground mt-3 max-w-prose text-sm">{lede}</p>}
             </div>
             {actions && <div className="flex items-center gap-2">{actions}</div>}

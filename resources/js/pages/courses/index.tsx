@@ -64,7 +64,6 @@ export default function CourseCatalog({
             <div className="mb-8">
                 <span className="text-primary text-xs font-semibold tracking-widest uppercase">Catalogue</span>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight">Courses</h1>
-                <div className="bg-primary mt-4 h-1 w-16 rounded-full" />
             </div>
 
             <div className="mb-6 flex flex-col gap-4">
