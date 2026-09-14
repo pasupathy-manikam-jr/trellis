@@ -43,6 +43,27 @@ npm run build          # production assets
 php artisan migrate:fresh --seed
 ```
 
+## pgAdmin
+
+Installed at `/Applications/pgAdmin 4.app` (v9.17). On first launch it asks you to set a
+master password — that is pgAdmin's own vault, unrelated to Postgres.
+
+Add the server with **Object → Register → Server**:
+
+| Field | Value |
+|---|---|
+| Name | `LMS local` |
+| Host | `127.0.0.1` |
+| Port | `5432` |
+| Maintenance database | `postgres` |
+| Username | `oric` |
+| Password | *(leave blank)* |
+
+Blank is correct — the local server uses `trust` auth, so no password is set. Postgres must
+be running first (see above) or the connection will refuse.
+
+You will see both `lms` and `lms_test`. Don't edit `lms_test` by hand; every test run drops it.
+
 ## Notes
 
 - Two databases: `lms` (app) and `lms_test` (tests, wiped per run).
