@@ -26,6 +26,7 @@ export default function LearnerHandbook() {
                 title="Taking a course"
                 lede="How to find something to learn, work through it, and come away with a certificate."
                 tone="learner"
+                href="/handbook"
                 contents={contents}
                 switcher={staff ? { href: '/handbook/admin', label: 'Running a course' } : undefined}
             >

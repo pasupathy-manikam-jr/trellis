@@ -18,6 +18,7 @@ export function HandbookPage({
     tone,
     contents,
     switcher,
+    href,
     children,
 }: {
     eyebrow: string;
@@ -26,10 +27,11 @@ export function HandbookPage({
     tone: Tone;
     contents: { href: string; label: string }[];
     switcher?: { href: string; label: string };
+    href: string;
     children: React.ReactNode;
 }) {
     return (
-        <PublicLayout>
+        <PublicLayout breadcrumbs={[{ title: 'Handbook', href }]}>
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <span

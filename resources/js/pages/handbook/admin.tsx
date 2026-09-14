@@ -37,6 +37,7 @@ export default function AdminHandbook() {
                 title="Running a course"
                 lede="How to build a course, publish it, and look after the people taking it."
                 tone="admin"
+                href="/handbook/admin"
                 contents={contents}
                 switcher={{ href: '/handbook', label: 'Taking a course' }}
             >

@@ -18,7 +18,7 @@ export default function Verify({
     certificate: Certificate | null;
 }) {
     return (
-        <PublicLayout>
+        <PublicLayout breadcrumbs={[{ title: 'Verify certificate', href: `/verify/${serial}` }]}>
             <Head title={`Verify ${serial}`} />
 
             <div className="mx-auto max-w-xl">

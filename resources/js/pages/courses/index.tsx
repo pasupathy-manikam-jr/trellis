@@ -58,7 +58,7 @@ export default function CourseCatalog({
     const active = filters.q || filters.category || filters.price;
 
     return (
-        <PublicLayout>
+        <PublicLayout breadcrumbs={[{ title: 'Courses', href: '/courses' }]}>
             <Head title="Courses" />
 
             <div className="mb-8">

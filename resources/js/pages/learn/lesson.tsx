@@ -46,7 +46,12 @@ export default function LessonPlayer({
         );
 
     return (
-        <PublicLayout>
+        <PublicLayout
+            breadcrumbs={[
+                { title: course.title, href: `/courses/${course.slug}` },
+                { title: lesson.title, href: `/learn/${course.slug}/${lesson.id}` },
+            ]}
+        >
             <Head title={lesson.title} />
 
             <div className="grid gap-8 lg:grid-cols-[280px_1fr]">

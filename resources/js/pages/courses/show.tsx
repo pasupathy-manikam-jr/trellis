@@ -34,7 +34,12 @@ export default function CourseShow({
     const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
 
     return (
-        <PublicLayout>
+        <PublicLayout
+            breadcrumbs={[
+                { title: 'Courses', href: '/courses' },
+                { title: course.title, href: `/courses/${course.slug}` },
+            ]}
+        >
             <Head title={course.title} />
 
             <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
