@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EnrollmentSource;
 use App\Mail\CourseCompletedMail;
 use Database\Factories\EnrollmentFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,18 +39,58 @@ class Enrollment extends Model
     }
 
     /**
+     * Attaches the two counts progress() needs as subquery columns, so listing
+     * enrolments costs one query rather than three apiece.
+     *
+     * The values are a snapshot taken when the row was read. Anything that
+     * writes completions and re-checks — syncCompletion() — must load the
+     * enrolment without this scope so it counts afresh.
+     */
+    public function scopeWithProgress(Builder $query): void
+    {
+        if ($query->getQuery()->columns === null) {
+            $query->select($query->getModel()->getTable().'.*');
+        }
+
+        $query->addSelect([
+            'lessons_total' => Lesson::query()
+                ->selectRaw('count(*)')
+                ->join('sections', 'sections.id', '=', 'lessons.section_id')
+                ->whereColumn('sections.course_id', 'enrollments.course_id')
+                ->whereNull('lessons.deleted_at'),
+
+            'lessons_completed' => LessonCompletion::query()
+                ->selectRaw('count(*)')
+                ->join('lessons', 'lessons.id', '=', 'lesson_completions.lesson_id')
+                ->join('sections', 'sections.id', '=', 'lessons.section_id')
+                ->whereColumn('sections.course_id', 'enrollments.course_id')
+                ->whereColumn('lesson_completions.user_id', 'enrollments.user_id')
+                ->whereNull('lessons.deleted_at'),
+        ]);
+    }
+
+    /**
      * Progress is derived from lesson_completions, never stored — so editing a
      * course can't leave a stale percentage behind.
+     *
+     * Uses the counts withProgress() attached when they are there, and counts
+     * for itself when they are not, so both paths give the same answer.
      *
      * @return array{completed: int, total: int, percent: int}
      */
     public function progress(): array
     {
-        $total = Lesson::whereIn('section_id', $this->course->sections()->select('id'))->count();
+        $lessons = Lesson::whereIn(
+            'section_id',
+            Section::where('course_id', $this->course_id)->select('id')
+        );
 
-        $completed = LessonCompletion::where('user_id', $this->user_id)
-            ->whereIn('lesson_id', Lesson::whereIn('section_id', $this->course->sections()->select('id'))->select('id'))
-            ->count();
+        $total = (int) ($this->lessons_total ?? (clone $lessons)->count());
+
+        $completed = (int) ($this->lessons_completed ?? LessonCompletion::query()
+            ->where('user_id', $this->user_id)
+            ->whereIn('lesson_id', (clone $lessons)->select('id'))
+            ->count());
 
         return [
             'completed' => $completed,

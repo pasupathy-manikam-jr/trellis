@@ -49,6 +49,7 @@ class CourseController extends Controller
                 'thumbnail_url' => $course->thumbnailUrl(),
             ],
             'enrollments' => $course->enrollments()
+                ->withProgress()
                 ->with('user:id,name,email')
                 ->latest()
                 ->get()

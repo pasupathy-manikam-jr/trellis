@@ -11,8 +11,14 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): Response
     {
+        $user = $request->user();
+
+        // One lookup for every certificate, rather than one per enrolment.
+        $serials = $user->certificates()->pluck('serial', 'course_id');
+
         return Inertia::render('dashboard', [
-            'enrollments' => $request->user()->enrollments()
+            'enrollments' => $user->enrollments()
+                ->withProgress()
                 ->with('course:id,slug,title,summary')
                 ->latest()
                 ->get()
@@ -21,7 +27,9 @@ class DashboardController extends Controller
                     'course' => $e->course->only('slug', 'title', 'summary'),
                     'progress' => $e->progress(),
                     'completed_at' => $e->completed_at,
-                    'certificate' => $e->certificate()?->only('serial'),
+                    'certificate' => $serials->has($e->course_id)
+                        ? ['serial' => $serials[$e->course_id]]
+                        : null,
                 ]),
         ]);
     }
