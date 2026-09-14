@@ -21,7 +21,7 @@ Revisit only when a paying customer names one.
 | Admin | React/Inertia pages under `/admin`, gated by a `role` middleware | Keeps the app one stack. Costs real CRUD work in Phases 1 and 4 — accepted deliberately. |
 | Database | **Postgres 17** | Free locally (Postgres.app / `brew install postgresql@17` / Docker). Same engine local and prod — no dialect surprises. |
 | Serve | `php artisan serve` or Herd | Nothing to install, nothing to pay. |
-| Video | **local disk + `<video>`** | `storage/app/public/videos`. Free, offline, good enough. |
+| Video | **private disk + `<video>`** | `storage/app/private/videos`, streamed through an access-checked route. Never `storage/app/public` — that is symlinked into `public/` and bypasses every check. |
 | Files | local `public` disk | Skip S3/medialibrary entirely until there's a server. |
 | Payments | **none — direct enroll** | `orders` table exists and is filled; no gateway called. Stripe drops in later. |
 | Email | Mailpit, else `MAIL_MAILER=log` | Free, local, no account. |
@@ -61,8 +61,10 @@ reviews            user_id, course_id, rating, body    -- unique(user_id, course
 **Drip:** `lessons.drip_days` = days after `enrollments.started_at` before unlock.
 One integer. No cron, no scheduler — compute on read.
 
-**Video:** `lessons.video_path` (local disk) replaces `video_id`. Served by Laravel through an
-auth-checked route, not a public URL — otherwise enrollment gating is decorative.
+**Video:** `lessons.video_path` points at the **private** disk (`storage/app/private/videos`).
+Served through `LessonVideoController`, which applies the same `LessonPolicy@view` as the
+lesson page. `storage/app/public` is symlinked into `public/` — anything there is fetchable
+with no session at all, which would make the whole gate decorative.
 `// ponytail: single-file mp4, no ABR/no signing. Swap for Bunny/Cloudflare Stream at deploy.`
 
 ## Phases

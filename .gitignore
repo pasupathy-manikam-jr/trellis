@@ -27,5 +27,7 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 
-/storage/app/public/videos/*
-!/storage/app/public/videos/.gitkeep
+/storage/app/private/videos/*
+!/storage/app/private/videos/.gitkeep
+/storage/app/public/thumbnails/*
+!/storage/app/public/thumbnails/.gitkeep

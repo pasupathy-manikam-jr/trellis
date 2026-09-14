@@ -22,7 +22,22 @@ import { useState } from 'react';
 
 const LESSON_TYPES: LessonType[] = ['text', 'video', 'download'];
 
-export default function CourseEdit({ course }: { course: Course }) {
+type AdminEnrollment = {
+    id: number;
+    source: string;
+    started_at: string;
+    completed_at: string | null;
+    user: { id: number; name: string; email: string };
+    progress: { completed: number; total: number; percent: number };
+};
+
+export default function CourseEdit({
+    course,
+    enrollments,
+}: {
+    course: Course;
+    enrollments: AdminEnrollment[];
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Courses', href: '/admin/courses' },
         { title: course.title, href: `/admin/courses/${course.slug}/edit` },
@@ -36,6 +51,7 @@ export default function CourseEdit({ course }: { course: Course }) {
                 <Flash />
                 <Details course={course} />
                 <Curriculum course={course} />
+                <Enrollments course={course} enrollments={enrollments} />
             </div>
         </AppLayout>
     );
@@ -249,22 +265,35 @@ function LessonDialog({
     lesson: Lesson | null;
     onClose: () => void;
 }) {
-    const { data, setData, post, patch, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<{
+        title: string;
+        slug: string;
+        type: LessonType;
+        content: string;
+        duration_sec: number | string;
+        is_preview: boolean;
+        video: File | null;
+        _method?: string;
+    }>({
         title: lesson?.title ?? '',
         slug: lesson?.slug ?? '',
-        type: lesson?.type ?? ('text' as LessonType),
+        type: lesson?.type ?? 'text',
         content: lesson?.content ?? '',
         duration_sec: lesson?.duration_sec ?? '',
         is_preview: lesson?.is_preview ?? false,
+        video: null,
+        // A multipart body can only be POSTed, so an edit spoofs PATCH.
+        ...(lesson ? { _method: 'patch' } : {}),
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        const options = { onSuccess: onClose, preserveScroll: true };
 
-        lesson
-            ? patch(`/admin/lessons/${lesson.id}`, options)
-            : post(`/admin/sections/${section.id}/lessons`, options);
+        post(lesson ? `/admin/lessons/${lesson.id}` : `/admin/sections/${section.id}/lessons`, {
+            onSuccess: onClose,
+            preserveScroll: true,
+            forceFormData: true,
+        });
     };
 
     return (
@@ -304,6 +333,20 @@ function LessonDialog({
                             />
                         </Field>
                     </div>
+
+                    {data.type === 'video' && (
+                        <Field label="Video file" error={errors.video}>
+                            <Input
+                                type="file"
+                                accept="video/mp4,video/webm,video/quicktime"
+                                onChange={(e) => setData('video', e.target.files?.[0] ?? null)}
+                            />
+                            <p className="text-muted-foreground text-xs">
+                                Stored on the private disk and streamed through an access-checked route.
+                                Max 500 MB.
+                            </p>
+                        </Field>
+                    )}
 
                     <Field label="Content" error={errors.content}>
                         <Textarea
@@ -397,6 +440,73 @@ function Field({
             <Label>{label}</Label>
             {children}
             {error && <p className="text-sm text-red-600">{error}</p>}
+        </div>
+    );
+}
+
+function Enrollments({ course, enrollments }: { course: Course; enrollments: AdminEnrollment[] }) {
+    const { data, setData, post, processing, errors, reset } = useForm({ email: '' });
+
+    return (
+        <div className="border-sidebar-border/70 dark:border-sidebar-border flex flex-col gap-4 rounded-xl border p-4">
+            <div>
+                <h2 className="font-semibold">Enrolments</h2>
+                <p className="text-muted-foreground text-sm">
+                    {enrollments.length} enrolled. Until checkout exists, this is how someone gets access
+                    to a paid course.
+                </p>
+            </div>
+
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    post(`/admin/courses/${course.slug}/enrollments`, { onSuccess: () => reset() });
+                }}
+                className="flex items-start gap-2"
+            >
+                <div className="flex-1">
+                    <Input
+                        type="email"
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
+                        placeholder="student@lms.test"
+                    />
+                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                </div>
+                <Button type="submit" variant="secondary" disabled={processing || !data.email}>
+                    <Plus className="size-4" /> Enrol
+                </Button>
+            </form>
+
+            {enrollments.length > 0 && (
+                <ul className="divide-y rounded-lg border">
+                    {enrollments.map((enrollment) => (
+                        <li key={enrollment.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                            <div className="min-w-0 flex-1">
+                                <div className="truncate font-medium">{enrollment.user.name}</div>
+                                <div className="text-muted-foreground truncate text-xs">
+                                    {enrollment.user.email}
+                                </div>
+                            </div>
+                            <Badge variant="outline" className="shrink-0">
+                                {enrollment.source}
+                            </Badge>
+                            <span className="text-muted-foreground shrink-0 text-xs">
+                                {enrollment.progress.percent}%
+                            </span>
+                            {enrollment.completed_at && (
+                                <Badge variant="secondary" className="shrink-0">
+                                    completed
+                                </Badge>
+                            )}
+                            <Destroy
+                                url={`/admin/enrollments/${enrollment.id}`}
+                                confirm={`Revoke access for ${enrollment.user.name}?`}
+                            />
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 }

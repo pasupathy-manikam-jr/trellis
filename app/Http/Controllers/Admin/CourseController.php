@@ -44,6 +44,15 @@ class CourseController extends Controller
     {
         return Inertia::render('admin/courses/edit', [
             'course' => $course->load('sections.lessons'),
+            'enrollments' => $course->enrollments()
+                ->with('user:id,name,email')
+                ->latest()
+                ->get()
+                ->map(fn ($e) => [
+                    ...$e->only('id', 'source', 'started_at', 'completed_at'),
+                    'user' => $e->user->only('id', 'name', 'email'),
+                    'progress' => $e->progress(),
+                ]),
         ]);
     }
 

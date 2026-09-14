@@ -3,9 +3,11 @@
 namespace Database\Seeders;
 
 use App\Enums\CourseStatus;
+use App\Enums\EnrollmentSource;
 use App\Enums\LessonType;
 use App\Enums\UserRole;
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\Section;
 use App\Models\User;
@@ -20,7 +22,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Admin', 'password' => 'password', 'role' => UserRole::Admin],
         );
 
-        User::updateOrCreate(
+        $student = User::updateOrCreate(
             ['email' => 'student@lms.test'],
             ['name' => 'Student', 'password' => 'password', 'role' => UserRole::Student],
         );
@@ -70,6 +72,36 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // A free course so self-enrolment is demonstrable without checkout.
+        $free = Course::create([
+            'instructor_id' => $admin->id,
+            'title' => 'Postgres for people who used MySQL',
+            'summary' => 'A short free primer. Enrol in one click.',
+            'price_cents' => 0,
+            'status' => CourseStatus::Published,
+            'published_at' => now(),
+        ]);
+
+        $basics = Section::create(['course_id' => $free->id, 'title' => 'Basics']);
+
+        foreach (['Types that actually exist', 'Sequences, not AUTO_INCREMENT', 'JSONB'] as $i => $title) {
+            Lesson::create([
+                'section_id' => $basics->id,
+                'title' => $title,
+                'type' => LessonType::Text,
+                'content' => "Placeholder body for “{$title}”.",
+                'is_preview' => $i === 0,
+            ]);
+        }
+
+        // The paid course is already bought, so the player is reachable on first look.
+        Enrollment::create([
+            'user_id' => $student->id,
+            'course_id' => $course->id,
+            'source' => EnrollmentSource::Manual,
+            'started_at' => now(),
+        ]);
 
         Course::factory()->create([
             'instructor_id' => $admin->id,

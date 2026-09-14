@@ -56,6 +56,24 @@ class Course extends Model
         return $this->hasManyThrough(Lesson::class, Section::class);
     }
 
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    /** The active enrolment for a user, or null. */
+    public function enrollmentFor(?User $user): ?Enrollment
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return $this->enrollments()
+            ->where('user_id', $user->id)
+            ->get()
+            ->first(fn (Enrollment $e) => $e->isActive());
+    }
+
     public function scopePublished(Builder $query): void
     {
         $query->where('status', CourseStatus::Published);

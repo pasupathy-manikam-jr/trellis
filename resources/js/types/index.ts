@@ -55,6 +55,41 @@ export interface Section {
     lessons: Lesson[];
 }
 
+export interface OutlineLesson {
+    id: number;
+    slug: string;
+    title: string;
+    type: LessonType;
+    duration_sec: number | null;
+    is_preview: boolean;
+    completed: boolean;
+    locked: boolean;
+}
+
+export interface OutlineSection {
+    id: number;
+    title: string;
+    lessons: OutlineLesson[];
+}
+
+export interface PlayerLesson {
+    id: number;
+    slug: string;
+    title: string;
+    type: LessonType;
+    content: string | null;
+    duration_sec: number | null;
+    is_preview: boolean;
+    completed: boolean;
+    video_url: string | null;
+}
+
+export interface Progress {
+    completed: number;
+    total: number;
+    percent: number;
+}
+
 export interface Course {
     id: number;
     instructor_id: number;

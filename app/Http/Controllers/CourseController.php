@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\CourseStatus;
 use App\Models\Course;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +25,7 @@ class CourseController extends Controller
         ]);
     }
 
-    public function show(Course $course): Response
+    public function show(Request $request, Course $course): Response
     {
         abort_unless($course->status === CourseStatus::Published, 404);
 
@@ -38,6 +39,13 @@ class CourseController extends Controller
             ),
         ]);
 
-        return Inertia::render('courses/show', ['course' => $course]);
+        $enrollment = $course->enrollmentFor($request->user());
+
+        return Inertia::render('courses/show', [
+            'course' => $course,
+            'enrolled' => $enrollment !== null,
+            'progress' => $enrollment?->progress(),
+            'can_self_enroll' => $request->user()?->can('enroll', $course) ?? false,
+        ]);
     }
 }

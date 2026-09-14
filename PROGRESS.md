@@ -2,7 +2,7 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 1 ✅ complete. Next: Phase 2 — enrolment + lesson player.
+**Now:** Phase 2 ✅ complete. Next: Phase 3 — orders + coupons (no gateway).
 
 ---
 
@@ -26,15 +26,18 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 - [x] ✅ *Done when:* course built in admin renders publicly — **verified live via MAMP**
 
 ## Phase 2 — Enrollment + player
-- [ ] Migrations: enrollments, lesson_completions
-- [ ] Enrollment policy / gate (`EnrollmentPolicy`)
-- [ ] Player shell: outline sidebar + lesson pane
-- [ ] Video lesson (local mp4 streamed through an auth-checked route)
-- [ ] Text lesson
-- [ ] Mark complete + progress %
-- [ ] Manual enroll action in the React admin
-- [ ] Test: non-enrolled user gets 403 on a non-preview lesson **and on its video URL**
-- [ ] ✅ *Done when:* enrolled student completes a course to 100%
+- [x] Migrations: enrollments, lesson_completions (both uniquely constrained)
+- [x] `LessonPolicy@view/@complete` + `CoursePolicy@enroll/@learn` — one rule, every caller
+- [x] Player: outline sidebar, progress bar, prev/next, locked lessons
+- [x] Video lesson — private disk, streamed via `LessonVideoController`, Range supported
+- [x] Video upload in the admin lesson dialog (spoofed PATCH, replaces + deletes the old file)
+- [x] Text lesson
+- [x] Mark complete / un-complete + derived progress %
+- [x] Manual enrol + revoke in the React admin; free self-enrolment on the course page
+- [x] Dashboard replaced with the learner's own courses
+- [x] Test: non-enrolled user gets 403 on a non-preview lesson **and on its video URL**
+- [x] 76 tests (26 new). Pint clean. Gating verified live through MAMP.
+- [x] ✅ *Done when:* enrolled student completes a course to 100%
 
 ## Phase 3 — Orders + coupons (no gateway)
 - [ ] Migrations: orders, coupons
@@ -63,6 +66,31 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### 2026-09-14 — Phase 2 done
+Enrolment, the player, progress, and gated video.
+
+**The disk was the real trap.** Phase 0 created `storage/app/public/videos` because the plan
+said so. That directory is symlinked into `public/` by `storage:link`, so anything in it is
+downloadable with no session at all — the access check would have been decorative from the
+first upload. Videos now live on the **private** disk and are streamed by
+`LessonVideoController`. PLAN.md was wrong and has been corrected.
+
+**One rule, not two.** `LessonPolicy@view` is the single gate. The player page, the lesson
+payload and the video stream all call it. A guard on the page alone would have left the
+video URL open — so there is a test that hits the video route directly as guest, as a
+signed-in stranger, and as an enrolled learner.
+
+**Progress stays derived**, never stored — `completed / total` counted at read time, so
+editing a course cannot leave a stale percentage. `enrollments.completed_at` is the one
+stamped value, and it un-stamps if a lesson is un-completed.
+
+**Proved rather than assumed:** multipart + spoofed PATCH mangles booleans in ways that are
+easy to get wrong, so there is a test posting exactly what the browser sends
+(`_method=patch`, `is_preview="1"`, a fake mp4) and asserting the result.
+
+**Still Phase 3:** no checkout. Paid courses show a disabled Buy button; an admin enrols
+people by email in the meantime.
 
 ### 2026-09-14 — Phase 1 done
 `courses / sections / lessons` + admin + public catalog. Verified end to end on
