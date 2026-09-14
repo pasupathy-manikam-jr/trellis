@@ -1,6 +1,7 @@
 import { ConfirmButton } from '@/components/confirm-button';
 import { DatePicker } from '@/components/date-picker';
 import { Flash } from '@/components/flash';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +41,12 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
 
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <Flash />
-                <h1 className="text-xl font-semibold">Coupons</h1>
+                <PageHeader
+                    eyebrow="Admin"
+                    tone="amber"
+                    title="Coupons"
+                    lede="A discount can take a price to zero, but never below it."
+                />
 
                 <form noValidate
                     onSubmit={(e) => {

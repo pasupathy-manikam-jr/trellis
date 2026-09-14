@@ -2,7 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { money } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
+import { PageHeader, StatTile } from '@/components/page-header';
 import { Head, Link } from '@inertiajs/react';
+import { ChartNoAxesColumn, GraduationCap, Trophy, Users } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Insights', href: '/admin/insights' }];
 
@@ -31,10 +33,10 @@ type Totals = {
 
 export default function Insights({ courses, totals }: { courses: Row[]; totals: Totals }) {
     const stats = [
-        { label: 'Revenue', value: money(totals.revenue_cents) },
-        { label: 'Enrolments', value: totals.enrollments.toLocaleString() },
-        { label: 'Completions', value: totals.completed.toLocaleString() },
-        { label: 'Published courses', value: totals.published.toLocaleString() },
+        { label: 'Revenue', value: money(totals.revenue_cents), icon: ChartNoAxesColumn, tint: 'var(--brand-teal)' },
+        { label: 'Enrolments', value: totals.enrollments.toLocaleString(), icon: Users, tint: 'var(--brand-sky)' },
+        { label: 'Completions', value: totals.completed.toLocaleString(), icon: Trophy, tint: 'var(--brand-amber)' },
+        { label: 'Published courses', value: totals.published.toLocaleString(), icon: GraduationCap, tint: 'var(--brand-violet)' },
     ];
 
     return (
@@ -42,22 +44,15 @@ export default function Insights({ courses, totals }: { courses: Row[]; totals: 
             <Head title="Insights" />
 
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <div>
-                    <h1 className="text-xl font-semibold">Insights</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Revenue counts paid orders only — refunds are excluded.
-                    </p>
-                </div>
+                <PageHeader
+                    eyebrow="Performance"
+                    title="Insights"
+                    lede="Revenue counts paid orders only — refunds are excluded."
+                />
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {stats.map((stat) => (
-                        <div
-                            key={stat.label}
-                            className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border p-4"
-                        >
-                            <div className="text-muted-foreground text-xs">{stat.label}</div>
-                            <div className="mt-1 text-2xl font-semibold tabular-nums">{stat.value}</div>
-                        </div>
+                        <StatTile key={stat.label} {...stat} />
                     ))}
                 </div>
 

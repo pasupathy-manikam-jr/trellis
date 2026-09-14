@@ -1,4 +1,5 @@
 import { Flash } from '@/components/flash';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData, type UserRole } from '@/types';
@@ -30,12 +31,12 @@ export default function Users({ users, roles }: { users: Row[]; roles: UserRole[
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <Flash />
 
-                <div>
-                    <h1 className="text-xl font-semibold">People</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Instructors get the course workspace, scoped to courses they own.
-                    </p>
-                </div>
+                <PageHeader
+                    eyebrow="Admin"
+                    tone="amber"
+                    title="People"
+                    lede="Instructors get the course workspace, scoped to courses they own."
+                />
 
                 {errors.role && (
                     <p className="rounded-lg border border-red-600/20 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-400">

@@ -1,5 +1,6 @@
 import { ConfirmButton } from '@/components/confirm-button';
 import { Flash } from '@/components/flash';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -35,13 +36,12 @@ export default function AdminOrders({ orders }: { orders: Order[] }) {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <Flash />
 
-                <div>
-                    <h1 className="text-xl font-semibold">Orders</h1>
-                    <p className="text-muted-foreground text-sm">
-                        {orders.length} order{orders.length === 1 ? '' : 's'} · {money(revenue)} collected
-                        (nothing was actually charged — no gateway yet)
-                    </p>
-                </div>
+                <PageHeader
+                    eyebrow="Admin"
+                    tone="amber"
+                    title="Orders"
+                    lede={`${orders.length} order${orders.length === 1 ? '' : 's'} · ${money(revenue)} collected. No payment provider is connected, so nothing has actually been charged.`}
+                />
 
                 {orders.length === 0 ? (
                     <p className="text-muted-foreground rounded-xl border border-dashed p-12 text-center text-sm">

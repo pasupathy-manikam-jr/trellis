@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Progress } from '@/types';
 import { Head, Link } from '@inertiajs/react';
+import { courseTint } from '@/components/course-card';
+import { PageHeader } from '@/components/page-header';
 import { Award, CheckCircle2 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -20,7 +22,15 @@ export default function Dashboard({ enrollments }: { enrollments: Enrollment[] }
             <Head title="Dashboard" />
 
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">My courses</h1>
+                <PageHeader
+                    eyebrow="Your learning"
+                    title="My courses"
+                    lede={
+                        enrollments.length
+                            ? 'Pick up where you left off.'
+                            : undefined
+                    }
+                />
 
                 {enrollments.length === 0 ? (
                     <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border border-dashed p-12 text-center">
@@ -35,8 +45,13 @@ export default function Dashboard({ enrollments }: { enrollments: Enrollment[] }
                             <Link
                                 key={id}
                                 href={`/learn/${course.slug}`}
-                                className="border-sidebar-border/70 dark:border-sidebar-border hover:border-foreground/20 flex flex-col gap-3 rounded-xl border p-4 transition-colors"
+                                className="border-sidebar-border/70 dark:border-sidebar-border hover:border-foreground/20 relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 pt-5 transition-colors hover:shadow-md"
                             >
+                                <span
+                                    className="absolute inset-x-0 top-0 h-1"
+                                    style={{ background: courseTint(id) }}
+                                    aria-hidden
+                                />
                                 <div className="flex items-start gap-2">
                                     <h2 className="flex-1 font-medium">{course.title}</h2>
                                     {completed_at && (

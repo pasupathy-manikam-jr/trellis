@@ -1,5 +1,6 @@
 import { ConfirmButton } from '@/components/confirm-button';
 import { Flash } from '@/components/flash';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,12 +23,12 @@ export default function Categories({ categories }: { categories: Category[] }) {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <Flash />
 
-                <div>
-                    <h1 className="text-xl font-semibold">Categories</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Shown as filters on the catalogue, in this order.
-                    </p>
-                </div>
+                <PageHeader
+                    eyebrow="Admin"
+                    tone="amber"
+                    title="Categories"
+                    lede="Shown as filter chips on the catalogue, in this order."
+                />
 
                 <form
                     noValidate

@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/page-header';
 import AppLayout from '@/layouts/app-layout';
 import { money } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
@@ -25,7 +26,7 @@ export default function Orders({ orders }: { orders: Order[] }) {
             <Head title="Orders" />
 
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <h1 className="text-xl font-semibold">Orders</h1>
+                <PageHeader eyebrow="Your account" title="Orders" />
 
                 {orders.length === 0 ? (
                     <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border border-dashed p-12 text-center">

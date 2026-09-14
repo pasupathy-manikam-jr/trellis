@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Flash } from '@/components/flash';
+import { PageHeader } from '@/components/page-header';
 import AppLayout from '@/layouts/app-layout';
 import { money } from '@/lib/format';
 import { type BreadcrumbItem, type Course } from '@/types';
@@ -23,14 +24,17 @@ export default function CourseIndex({ courses }: { courses: Course[] }) {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <Flash />
 
-                <div className="flex items-center justify-between gap-4">
-                    <h1 className="text-xl font-semibold">Courses</h1>
-                    <Button asChild>
-                        <Link href="/admin/courses/create">
-                            <Plus className="size-4" /> New course
-                        </Link>
-                    </Button>
-                </div>
+                <PageHeader
+                    eyebrow="Workspace"
+                    title="Courses"
+                    actions={
+                        <Button asChild>
+                            <Link href="/admin/courses/create">
+                                <Plus className="size-4" /> New course
+                            </Link>
+                        </Button>
+                    }
+                />
 
                 {courses.length === 0 ? (
                     <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border border-dashed p-12 text-center">
