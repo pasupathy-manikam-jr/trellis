@@ -2,16 +2,17 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 0 — not started.
+**Now:** Phase 0 ✅ complete. Next: Phase 1 — content model + admin.
 
 ---
 
 ## Phase 0 — Scaffold
-- [ ] `laravel new` w/ react-starter-kit
-- [ ] Postgres running locally, DB created, first migration runs
-- [ ] Filament 4 installed, admin login works
-- [ ] Pest + Pint green
-- [ ] `storage:link` + sample video drops into `storage/app/public/videos`
+- [x] `laravel new` w/ react-starter-kit — Laravel 12.69.2, React 19, Inertia 2, TS, shadcn
+- [x] Postgres 17.11 (Postgres.app) running; `lms` + `lms_test` created, migrations run
+- [x] Filament 4 at `/admin`, gated on `UserRole::Admin` (5 access tests)
+- [x] Pest replaces PHPUnit; 31 passed. Pint clean.
+- [x] `storage:link` + `storage/app/public/videos` (gitignored, `.gitkeep` only)
+- [x] Committed `fa69c08`
 
 ## Phase 1 — Content model + admin
 - [ ] Migrations: courses, sections, lessons
@@ -60,7 +61,23 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 
 ## Log
 
-### 2026-09-14
+### 2026-09-14 — Phase 0 done
+Toolchain found: PHP 8.4.17 (MAMP, has `pdo_pgsql`), Composer 2.9, Node 24. No brew, no
+Docker, no Postgres → installed Postgres.app 2.9.6 (PG 17.11), data dir at
+`~/Library/Application Support/Postgres/var-17`, started via bundled `pg_ctl`.
+
+**Two calls worth remembering:**
+1. Tests run on Postgres (`lms_test`), not SQLite in-memory. The starter kit defaults to
+   SQLite; keeping it would reintroduce the exact dialect risk we picked Postgres to avoid.
+   Costs ~2s per suite run. Worth it.
+2. `role` landed in Phase 0, not Phase 1. Filament's panel allows any authenticated user by
+   default — without the gate, every registered student could reach `/admin`. `role` is in
+   `$fillable`, so there's a test asserting registration can't self-assign `admin`.
+
+Server start (not automatic on boot):
+`"/Applications/Postgres.app/Contents/Versions/17/bin/pg_ctl" -D "$HOME/Library/Application Support/Postgres/var-17" start`
+Or just open Postgres.app once and it adopts the data dir.
+
 **Local-only constraint added.** No paid services, no accounts, works offline.
 Dropped: Cloudflare/Bunny→local mp4 behind an auth route, S3→local disk,
 Stripe→direct enroll (orders table still filled, gateway slots in at `OrderController::store`),
