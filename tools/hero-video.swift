@@ -2,28 +2,36 @@ import AVFoundation
 import CoreGraphics
 import Foundation
 
-// Renders a seamless abstract loop for the Trellis hero: drifting brand-coloured
-// blobs over a deep gradient. Motion is driven by whole multiples of 2π so the
-// last frame flows back into the first.
+// Trellis hero loop.
+//
+// The mark is a diamond lattice, so the motion is growth climbing one: light
+// travels up the lattice and the nodes it passes light up and fade, the way
+// lessons complete along a course. Nothing is decorative for its own sake —
+// the lattice is the logo, the upward travel is progress, the nodes are lessons.
+//
+// The wave crosses a whole number of lattice rows per loop, so the last frame
+// flows back into the first.
 
 let width = 1600, height = 900
 let fps: Int32 = 24
-let seconds = 12.0
+let seconds = 14.0
 let frameCount = Int(Double(fps) * seconds)
+
+let spacing: CGFloat = 96          // lattice pitch
+let sweeps = 1.0                   // times the light climbs the full page per loop
 let outURL = URL(fileURLWithPath: CommandLine.arguments[1])
 try? FileManager.default.removeItem(at: outURL)
 
 let writer = try AVAssetWriter(outputURL: outURL, fileType: .mp4)
-let settings: [String: Any] = [
+let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
     AVVideoCodecKey: AVVideoCodecType.h264,
     AVVideoWidthKey: width,
     AVVideoHeightKey: height,
     AVVideoCompressionPropertiesKey: [
-        AVVideoAverageBitRateKey: 1_600_000,
+        AVVideoAverageBitRateKey: 2_000_000,
         AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
     ],
-]
-let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+])
 input.expectsMediaDataInRealTime = false
 let adaptor = AVAssetWriterInputPixelBufferAdaptor(
     assetWriterInput: input,
@@ -37,72 +45,29 @@ writer.startWriting()
 writer.startSession(atSourceTime: .zero)
 
 let space = CGColorSpaceCreateDeviceRGB()
+let w = CGFloat(width), h = CGFloat(height)
 
-struct Blob {
-    let rgb: (CGFloat, CGFloat, CGFloat)
-    let cx: CGFloat, cy: CGFloat     // centre, as a fraction of the canvas
-    let dx: CGFloat, dy: CGFloat     // drift amplitude
-    let radius: CGFloat
-    let cycles: Double               // whole cycles per loop, so it closes
-    let phase: Double
-    let alpha: CGFloat
+/// A single soft band. `u` is height up the page (0 bottom, 1 top); `t` drives
+/// the climb. Periodic, so the band leaving the top is the one entering the
+/// bottom and the loop closes.
+func climb(_ u: Double, _ t: Double, width: Double = 0.20) -> CGFloat {
+    let x = (u - t * sweeps).truncatingRemainder(dividingBy: 1)
+    let p = x < 0 ? x + 1 : x
+    let d = min(p, 1 - p)                     // distance to the crest
+    return CGFloat(exp(-pow(d / width, 2)))
 }
 
-// Kept deliberately dim: the hero carries white text, and additive blending
-// blows out fast. These are glows on a dark ground, not colour fields.
-let blobs = [
-    Blob(rgb: (0.137, 0.580, 0.494), cx: 0.28, cy: 0.34, dx: 0.26, dy: 0.20,
-         radius: 0.46, cycles: 1, phase: 0.0, alpha: 0.34),        // teal
-    Blob(rgb: (0.078, 0.655, 0.922), cx: 0.74, cy: 0.44, dx: 0.24, dy: 0.26,
-         radius: 0.40, cycles: 2, phase: 1.9, alpha: 0.26),        // sky
-    Blob(rgb: (0.561, 0.369, 0.871), cx: 0.48, cy: 0.82, dx: 0.30, dy: 0.18,
-         radius: 0.44, cycles: 1, phase: 3.4, alpha: 0.24),        // violet
-    Blob(rgb: (0.961, 0.639, 0.078), cx: 0.66, cy: 0.18, dx: 0.22, dy: 0.24,
-         radius: 0.24, cycles: 3, phase: 0.8, alpha: 0.18),        // amber
-]
-
-struct Mote {
-    let x0: CGFloat, y0: CGFloat
-    let speed: CGFloat        // canvas widths travelled per loop; whole numbers only
-    let size: CGFloat
-    let alpha: CGFloat
-    let bob: CGFloat
-    let bobCycles: Double
-    let phase: Double
-}
-
-// Deterministic: the same asset comes out of every run.
-var seed: UInt64 = 0x5EED_1234
-func rnd() -> CGFloat {
-    seed = seed &* 6364136223846793005 &+ 1442695040888963407
-    return CGFloat((seed >> 33) % 100_000) / 100_000
-}
-
-let motes: [Mote] = (0..<70).map { _ in
-    Mote(
-        x0: rnd(),
-        y0: rnd(),
-        speed: [1, 1, 2].randomElement()!,
-        size: 0.004 + rnd() * 0.020,
-        alpha: 0.10 + rnd() * 0.22,
-        bob: 0.02 + rnd() * 0.05,
-        bobCycles: Double([1, 2].randomElement()!),
-        phase: Double(rnd()) * 6.283
-    )
-}
-
-func makeBuffer() -> CVPixelBuffer {
-    var pb: CVPixelBuffer?
-    CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pb)
-    return pb!
-}
+/// Height up the page, 0 at the bottom.
+func up(_ y: CGFloat) -> Double { Double((h - y) / h) }
 
 for frame in 0..<frameCount {
-    let t = Double(frame) / Double(frameCount)          // 0 ..< 1
+    let t = Double(frame) / Double(frameCount)
 
     while !input.isReadyForMoreMediaData { usleep(2000) }
 
-    let buffer = makeBuffer()
+    var pb: CVPixelBuffer?
+    CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &pb)
+    let buffer = pb!
     CVPixelBufferLockBaseAddress(buffer, [])
     let ctx = CGContext(
         data: CVPixelBufferGetBaseAddress(buffer),
@@ -111,70 +76,93 @@ for frame in 0..<frameCount {
         space: space,
         bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)!
 
-    // Deep base gradient.
-    let base = CGGradient(
-        colorsSpace: space,
-        colors: [
-            CGColor(red: 0.016, green: 0.071, blue: 0.063, alpha: 1),
-            CGColor(red: 0.020, green: 0.094, blue: 0.118, alpha: 1),
-        ] as CFArray,
-        locations: [0, 1])!
-    ctx.drawLinearGradient(
-        base,
-        start: CGPoint(x: 0, y: CGFloat(height)),
-        end: CGPoint(x: CGFloat(width), y: 0),
-        options: [])
+    // Ground.
+    let base = CGGradient(colorsSpace: space, colors: [
+        CGColor(red: 0.012, green: 0.063, blue: 0.055, alpha: 1),
+        CGColor(red: 0.020, green: 0.098, blue: 0.125, alpha: 1),
+    ] as CFArray, locations: [0, 1])!
+    ctx.drawLinearGradient(base, start: CGPoint(x: 0, y: h), end: CGPoint(x: w, y: 0), options: [])
 
     ctx.setBlendMode(.plusLighter)
 
-    for b in blobs {
-        let a = 2 * Double.pi * b.cycles * t + b.phase
-        let x = (b.cx + b.dx * CGFloat(cos(a))) * CGFloat(width)
-        let y = (b.cy + b.dy * CGFloat(sin(a))) * CGFloat(height)
-        let r = b.radius * CGFloat(width) * (1 + 0.10 * CGFloat(sin(a * 1)))
-
-        let g = CGGradient(
-            colorsSpace: space,
-            colors: [
-                CGColor(red: b.rgb.0, green: b.rgb.1, blue: b.rgb.2, alpha: b.alpha),
-                CGColor(red: b.rgb.0, green: b.rgb.1, blue: b.rgb.2, alpha: 0),
-            ] as CFArray,
-            locations: [0, 1])!
-
-        ctx.drawRadialGradient(
-            g,
-            startCenter: CGPoint(x: x, y: y), startRadius: 0,
-            endCenter: CGPoint(x: x, y: y), endRadius: r,
-            options: [])
+    // Two slow colour washes for depth — teal low, violet high.
+    for (rgb, cx, cy, rad, alpha, cyc, ph) in [
+        ((0.137, 0.580, 0.494) as (CGFloat, CGFloat, CGFloat), 0.30, 0.30, 0.52, 0.26, 1.0, 0.0),
+        ((0.478, 0.333, 0.800), 0.74, 0.72, 0.46, 0.18, 1.0, 3.1),
+    ] {
+        let a = 2 * Double.pi * cyc * t + ph
+        let x = (CGFloat(cx) + 0.10 * CGFloat(cos(a))) * w
+        let y = (CGFloat(cy) + 0.08 * CGFloat(sin(a))) * h
+        let g = CGGradient(colorsSpace: space, colors: [
+            CGColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: CGFloat(alpha)),
+            CGColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 0),
+        ] as CFArray, locations: [0, 1])!
+        ctx.drawRadialGradient(g, startCenter: CGPoint(x: x, y: y), startRadius: 0,
+                               endCenter: CGPoint(x: x, y: y), endRadius: CGFloat(rad) * w, options: [])
     }
 
-    // Motes drift left-to-right, each covering a whole number of canvas widths
-    // over the loop. Drawing every one twice, a width apart, means one slides in
-    // as its twin slides out — no pop at the wrap.
-    for m in motes {
-        let travel = (m.x0 + m.speed * CGFloat(t)).truncatingRemainder(dividingBy: 1)
-        let bob = m.bob * CGFloat(sin(2 * Double.pi * m.bobCycles * t + m.phase))
-        let y = (m.y0 + bob) * CGFloat(height)
-        let r = m.size * CGFloat(width)
+    // --- the lattice -------------------------------------------------------
+    // Two families of 45-degree lines make the diamond cells of the mark. Each
+    // line is drawn in short segments so the climbing band can brighten just
+    // the part of it that the light has reached.
+    ctx.setLineCap(.round)
 
-        for copy in [travel, travel - 1] {
-            let x = copy * CGFloat(width)
-            if x < -r || x > CGFloat(width) + r { continue }
+    let diag = spacing * 1.4142
+    let lines = Int((w + h) / diag) + 3
+    let step: CGFloat = 24                      // segment length along the line
 
-            let g = CGGradient(
-                colorsSpace: space,
-                colors: [
-                    CGColor(red: 0.78, green: 0.95, blue: 0.94, alpha: m.alpha),
-                    CGColor(red: 0.60, green: 0.88, blue: 0.92, alpha: 0),
-                ] as CFArray,
-                locations: [0, 1])!
+    for family in 0..<2 {
+        let rising = family == 0
+        for i in -2...lines {
+            let c = CGFloat(i) * diag
+            let start = rising ? CGPoint(x: c - h, y: 0) : CGPoint(x: c, y: 0)
+            let dir: CGFloat = rising ? 1 : -1
 
-            ctx.drawRadialGradient(
-                g,
-                startCenter: CGPoint(x: x, y: y), startRadius: 0,
-                endCenter: CGPoint(x: x, y: y), endRadius: r,
-                options: [])
+            var y: CGFloat = 0
+            while y < h {
+                let y2 = min(y + step, h)
+                let x1 = start.x + dir * y
+                let x2 = start.x + dir * y2
+                if max(x1, x2) < -step || min(x1, x2) > w + step { y = y2; continue }
+
+                let glow = climb(up((y + y2) / 2), t)
+                ctx.setStrokeColor(CGColor(red: 0.45, green: 0.88, blue: 0.82,
+                                           alpha: 0.085 + 0.24 * glow))
+                ctx.setLineWidth(1.0 + 1.0 * glow)
+                ctx.beginPath()
+                ctx.move(to: CGPoint(x: x1, y: y))
+                ctx.addLine(to: CGPoint(x: x2, y: y2))
+                ctx.strokePath()
+
+                y = y2
+            }
         }
+    }
+
+    // --- nodes -------------------------------------------------------------
+    // The lattice vertices. They flare as the light reaches them and fade
+    // behind it — lessons completing on the way up.
+    var row = 0
+    var ny = h + spacing
+    while ny > -spacing {
+        let offset: CGFloat = row.isMultiple(of: 2) ? 0 : spacing / 2
+        var nx = offset - spacing
+        while nx < w + spacing {
+            let glow = climb(up(ny), t, width: 0.15)
+
+            if glow > 0.015 {
+                let r = 2.0 + 13 * glow
+                let g = CGGradient(colorsSpace: space, colors: [
+                    CGColor(red: 0.80, green: 1.0, blue: 0.94, alpha: 0.05 + 0.34 * glow),
+                    CGColor(red: 0.40, green: 0.92, blue: 0.88, alpha: 0),
+                ] as CFArray, locations: [0, 1])!
+                ctx.drawRadialGradient(g, startCenter: CGPoint(x: nx, y: ny), startRadius: 0,
+                                       endCenter: CGPoint(x: nx, y: ny), endRadius: r, options: [])
+            }
+            nx += spacing
+        }
+        ny -= spacing / 2
+        row += 1
     }
 
     CVPixelBufferUnlockBaseAddress(buffer, [])
