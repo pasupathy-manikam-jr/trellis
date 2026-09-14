@@ -45,7 +45,7 @@ class CourseController extends Controller
             'course' => $course,
             'enrolled' => $enrollment !== null,
             'progress' => $enrollment?->progress(),
-            'can_self_enroll' => $request->user()?->can('enroll', $course) ?? false,
+            'can_purchase' => $request->user()?->can('purchase', $course) ?? false,
         ]);
     }
 }

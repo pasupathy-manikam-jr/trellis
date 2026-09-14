@@ -2,7 +2,7 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 2 ✅ complete. Next: Phase 3 — orders + coupons (no gateway).
+**Now:** Phase 3 ✅ complete. Next: Phase 4 — quizzes + certificates.
 
 ---
 
@@ -40,13 +40,15 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 - [x] ✅ *Done when:* enrolled student completes a course to 100%
 
 ## Phase 3 — Orders + coupons (no gateway)
-- [ ] Migrations: orders, coupons
-- [ ] Enroll action → order (`status=paid`) → enrollment, in one transaction
-- [ ] Coupon apply + redemption count + expiry
-- [ ] Free-course path (same flow, amount 0)
-- [ ] Order history page
-- [ ] Test: coupon math, expired/exhausted coupon rejected, double-enroll is a no-op
-- [ ] ✅ *Done when:* visitor enrolls end to end; only the card charge is missing
+- [x] Migrations: orders, coupons
+- [x] Purchase → order (`status=paid`) → coupon redemption → enrolment, one transaction
+- [x] Coupon apply + redemption count + expiry + `lockForUpdate` on the limit
+- [x] Free-course path (same flow, amount 0)
+- [x] Order history `/orders`; admin `/admin/orders` with refund; admin `/admin/coupons`
+- [x] Refund revokes access and returns the redemption
+- [x] Test: coupon math, expired/exhausted rejected, double-purchase refused
+- [x] 89 tests (18 new, 5 superseded removed). Pint clean.
+- [x] ✅ *Done when:* visitor enrols end to end — **verified live: $49.00 → HALFOFF → $24.50**
 
 ## Phase 4 — Quizzes + certificates
 - [ ] Migrations: quizzes, questions, options, quiz_attempts, attempt_answers
@@ -66,6 +68,29 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### 2026-09-14 — Phase 3 done
+Orders, coupons, refunds. Still no gateway.
+
+**Consolidated rather than added.** Phase 2 had `EnrollmentController` granting free
+enrolment; Phase 3 would have added a second path for paid. Two places that grant access is
+how they drift apart. `EnrollmentController` is deleted — free and paid now run the same
+`OrderController@store`, differing only in price. `CoursePolicy@enroll` became `@purchase`.
+Five Phase 2 tests were superseded by CheckoutTest and removed rather than left to rot.
+
+**Money rules worth remembering:**
+- A discount is clamped to the subtotal — a coupon can take a price to zero, never below.
+- Percentages round half-up, favouring the customer by at most a cent. Asserted directly.
+- The coupon row is `lockForUpdate`-ed before its limit is checked, so two people racing for
+  the last redemption cannot both win it.
+- A discounted-to-zero order is recorded as `source = free`, not `purchase`.
+
+**Refund revokes access.** Otherwise the money goes back and the course does not. It also
+decrements the coupon's redemption count.
+
+**The Stripe seam is one place:** `OrderController@store`, between validation and the
+transaction. Everything after it — order, redemption, enrolment — already works and is
+tested. No `stripe_id` column yet; that lands with the gateway and its own idempotency needs.
 
 ### 2026-09-14 — Phase 2 done
 Enrolment, the player, progress, and gated video.

@@ -8,11 +8,13 @@ use App\Models\User;
 
 class CoursePolicy
 {
-    /** Self-enrolment is free courses only; paid courses go through checkout in Phase 3. */
-    public function enroll(User $user, Course $course): bool
+    /**
+     * Checkout is open on any published course the user is not already in.
+     * Free and paid take the same path — the price is what differs, not the flow.
+     */
+    public function purchase(User $user, Course $course): bool
     {
         return $course->status === CourseStatus::Published
-            && $course->isFree()
             && $course->enrollmentFor($user) === null;
     }
 

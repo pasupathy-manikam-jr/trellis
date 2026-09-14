@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/public-layout';
 import { duration, money } from '@/lib/format';
 import { type Course, type Progress } from '@/types';
+import { Input } from '@/components/ui/input';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { type SharedData } from '@/types';
 import { Download, Eye, FileText, LoaderCircle, Play } from 'lucide-react';
 
@@ -13,10 +15,10 @@ type Props = {
     course: Course;
     enrolled: boolean;
     progress: Progress | null;
-    can_self_enroll: boolean;
+    can_purchase: boolean;
 };
 
-export default function CourseShow({ course, enrolled, progress, can_self_enroll }: Props) {
+export default function CourseShow({ course, enrolled, progress, can_purchase }: Props) {
     const sections = course.sections ?? [];
     const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
 
@@ -90,7 +92,7 @@ export default function CourseShow({ course, enrolled, progress, can_self_enroll
                 <aside className="lg:col-span-1">
                     <div className="sticky top-4 flex flex-col gap-3 rounded-xl border p-4">
                         <div className="text-2xl font-semibold">{money(course.price_cents, course.currency)}</div>
-                        <EnrolBox course={course} enrolled={enrolled} progress={progress} canSelfEnrol={can_self_enroll} />
+                        <EnrolBox course={course} enrolled={enrolled} progress={progress} canPurchase={can_purchase} />
                     </div>
                 </aside>
             </div>
@@ -102,15 +104,16 @@ function EnrolBox({
     course,
     enrolled,
     progress,
-    canSelfEnrol,
+    canPurchase,
 }: {
     course: Course;
     enrolled: boolean;
     progress: Progress | null;
-    canSelfEnrol: boolean;
+    canPurchase: boolean;
 }) {
     const { auth } = usePage<SharedData>().props;
-    const { post, processing } = useForm({});
+    const { data, setData, post, processing, errors } = useForm({ coupon_code: '' });
+    const [showCoupon, setShowCoupon] = useState(false);
 
     if (enrolled) {
         return (
@@ -140,27 +143,53 @@ function EnrolBox({
         );
     }
 
-    if (canSelfEnrol) {
-        return (
-            <Button
-                className="w-full"
-                disabled={processing}
-                onClick={() => post(`/courses/${course.slug}/enroll`)}
-            >
-                {processing && <LoaderCircle className="size-4 animate-spin" />}
-                Enrol for free
-            </Button>
-        );
+    if (!canPurchase) {
+        return <p className="text-muted-foreground text-sm">This course is not open for enrolment.</p>;
     }
 
+    const free = course.price_cents === 0;
+
     return (
-        <>
-            <Button disabled className="w-full">
-                Buy — Phase 3
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                post(`/courses/${course.slug}/purchase`);
+            }}
+            className="flex flex-col gap-3"
+        >
+            {!free &&
+                (showCoupon ? (
+                    <div className="grid gap-1">
+                        <Input
+                            autoFocus
+                            value={data.coupon_code}
+                            onChange={(e) => setData('coupon_code', e.target.value.toUpperCase())}
+                            placeholder="Coupon code"
+                        />
+                        {errors.coupon_code && (
+                            <p className="text-xs text-red-600">{errors.coupon_code}</p>
+                        )}
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => setShowCoupon(true)}
+                        className="text-muted-foreground self-start text-xs underline"
+                    >
+                        Have a coupon?
+                    </button>
+                ))}
+
+            <Button type="submit" className="w-full" disabled={processing}>
+                {processing && <LoaderCircle className="size-4 animate-spin" />}
+                {free ? 'Enrol for free' : 'Buy this course'}
             </Button>
-            <p className="text-muted-foreground text-xs">
-                Checkout arrives next phase. An admin can enrol you manually in the meantime.
-            </p>
-        </>
+
+            {!free && (
+                <p className="text-muted-foreground text-xs">
+                    No card is charged — payment is not wired up yet. The order is still recorded.
+                </p>
+            )}
+        </form>
     );
 }

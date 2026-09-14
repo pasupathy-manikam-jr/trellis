@@ -23,7 +23,7 @@ Revisit only when a paying customer names one.
 | Serve | `php artisan serve` or Herd | Nothing to install, nothing to pay. |
 | Video | **private disk + `<video>`** | `storage/app/private/videos`, streamed through an access-checked route. Never `storage/app/public` — that is symlinked into `public/` and bypasses every check. |
 | Files | local `public` disk | Skip S3/medialibrary entirely until there's a server. |
-| Payments | **none — direct enroll** | `orders` table exists and is filled; no gateway called. Stripe drops in later. |
+| Payments | **none — direct purchase** | `orders` filled for real, coupons redeemed, no gateway called. Stripe drops into `OrderController@store`. |
 | Email | Mailpit, else `MAIL_MAILER=log` | Free, local, no account. |
 | Roles | `role` enum column on users | 3 roles (admin/instructor/student). Spatie permissions is overkill until it isn't. |
 | PDF certs | `barryvdh/laravel-dompdf` | Pure PHP, renders offline. |

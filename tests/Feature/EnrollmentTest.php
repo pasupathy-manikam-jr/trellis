@@ -1,5 +1,8 @@
 <?php
 
+// Enrolment *by purchase* is covered in CheckoutTest — this file is what is left:
+// the player entry point, progress accounting, and admin-granted access.
+
 use App\Enums\EnrollmentSource;
 use App\Enums\UserRole;
 use App\Models\Course;
@@ -16,54 +19,6 @@ function courseWithLessons(int $count = 3, array $attributes = []): Course
 
     return $course;
 }
-
-test('a learner enrols themselves in a free course', function () {
-    $course = courseWithLessons(attributes: ['price_cents' => 0]);
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-        ->post("/courses/{$course->slug}/enroll")
-        ->assertRedirect("/learn/{$course->slug}");
-
-    $enrollment = Enrollment::sole();
-
-    expect($enrollment->user_id)->toBe($user->id)
-        ->and($enrollment->source)->toBe(EnrollmentSource::Free);
-});
-
-test('a paid course cannot be self-enrolled', function () {
-    $course = courseWithLessons(attributes: ['price_cents' => 4900]);
-
-    $this->actingAs(User::factory()->create())
-        ->post("/courses/{$course->slug}/enroll")
-        ->assertForbidden();
-
-    expect(Enrollment::count())->toBe(0);
-});
-
-test('a draft course cannot be enrolled in', function () {
-    $course = Course::factory()->free()->create();
-
-    $this->actingAs(User::factory()->create())
-        ->post("/courses/{$course->slug}/enroll")
-        ->assertForbidden();
-});
-
-test('enrolling twice is refused', function () {
-    $course = courseWithLessons(attributes: ['price_cents' => 0]);
-    $user = User::factory()->create();
-
-    $this->actingAs($user)->post("/courses/{$course->slug}/enroll");
-    $this->actingAs($user)->post("/courses/{$course->slug}/enroll")->assertForbidden();
-
-    expect(Enrollment::count())->toBe(1);
-});
-
-test('guests are sent to log in rather than enrolled', function () {
-    $course = courseWithLessons(attributes: ['price_cents' => 0]);
-
-    $this->post("/courses/{$course->slug}/enroll")->assertRedirect('/login');
-});
 
 test('the course entry point lands on the first lesson', function () {
     $course = courseWithLessons();

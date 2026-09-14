@@ -1,15 +1,17 @@
 <?php
 
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
 use App\Http\Controllers\Admin\LessonController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LessonCompletionController;
 use App\Http\Controllers\LessonVideoController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -25,7 +27,8 @@ Route::get('lessons/{lesson}/video', [LessonVideoController::class, 'show'])->na
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    Route::post('courses/{course}/enroll', [EnrollmentController::class, 'store'])->name('courses.enroll');
+    Route::post('courses/{course}/purchase', [OrderController::class, 'store'])->name('courses.purchase');
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('learn/{course}', [LearnController::class, 'show'])->name('learn.show');
 
     Route::post('lessons/{lesson}/complete', [LessonCompletionController::class, 'store'])->name('lessons.complete');
@@ -34,6 +37,13 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('courses', AdminCourseController::class)->except('show');
+
+    Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
+    Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');
+    Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
+
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 
     Route::post('courses/{course}/enrollments', [AdminEnrollmentController::class, 'store'])->name('enrollments.store');
     Route::delete('enrollments/{enrollment}', [AdminEnrollmentController::class, 'destroy'])->name('enrollments.destroy');

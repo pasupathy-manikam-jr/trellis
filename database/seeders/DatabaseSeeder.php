@@ -3,11 +3,10 @@
 namespace Database\Seeders;
 
 use App\Enums\CourseStatus;
-use App\Enums\EnrollmentSource;
 use App\Enums\LessonType;
 use App\Enums\UserRole;
+use App\Models\Coupon;
 use App\Models\Course;
-use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\Section;
 use App\Models\User;
@@ -95,13 +94,11 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // The paid course is already bought, so the player is reachable on first look.
-        Enrollment::create([
-            'user_id' => $student->id,
-            'course_id' => $course->id,
-            'source' => EnrollmentSource::Manual,
-            'started_at' => now(),
-        ]);
+        // Left unbought on purpose: the paid course is the one to try checkout on.
+        Coupon::create(['code' => 'LAUNCH20', 'percent_off' => 20]);
+        Coupon::create(['code' => 'HALFOFF', 'percent_off' => 50, 'max_redemptions' => 2]);
+        Coupon::create(['code' => 'TENOFF', 'amount_off_cents' => 1000]);
+        Coupon::create(['code' => 'LASTYEAR', 'percent_off' => 90, 'expires_at' => now()->subDay()]);
 
         Course::factory()->create([
             'instructor_id' => $admin->id,
