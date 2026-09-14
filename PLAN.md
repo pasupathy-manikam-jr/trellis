@@ -1,7 +1,7 @@
 # LMS — Plan
 
 **Shape:** course creator selling online. Public catalog → purchase → learn → certificate.
-**Stack:** Laravel 12 · Inertia 2 + React 19 + TS · Tailwind + shadcn/ui · Filament 4 (admin) · Postgres 17.
+**Stack:** Laravel 13 · Inertia 2 + React 19 + TS · Tailwind + shadcn/ui · Filament 5 (admin) · Postgres 17.
 **Constraint: runs entirely on localhost. Zero paid services, zero accounts, works offline.**
 
 ## Non-goals (explicit — do not build)
@@ -17,7 +17,7 @@ Revisit only when a paying customer names one.
 | Thing | Choice | Why |
 |---|---|---|
 | Scaffold | `laravel/react-starter-kit` | Official. Inertia+React+TS+shadcn+auth, day one. |
-| Admin | Filament 4 | Course/lesson CRUD for free. Saves ~6 weeks. |
+| Admin | Filament 5 | Course/lesson CRUD for free. Saves ~6 weeks. |
 | Database | **Postgres 17** | Free locally (Postgres.app / `brew install postgresql@17` / Docker). Same engine local and prod — no dialect surprises. |
 | Serve | `php artisan serve` or Herd | Nothing to install, nothing to pay. |
 | Video | **local disk + `<video>`** | `storage/app/public/videos`. Free, offline, good enough. |
@@ -69,7 +69,7 @@ auth-checked route, not a public URL — otherwise enrollment gating is decorati
 Each phase ships something usable. Stop after any phase and you still have a product.
 
 ### Phase 0 — Scaffold
-Laravel 12 + react-starter-kit, Postgres, Filament, Pest + Pint. Runs on `php artisan serve`.
+Laravel 13 + react-starter-kit, Postgres, Filament, Pest + Pint. Runs on `php artisan serve`.
 
 ### Phase 1 — Content model + admin
 `courses / sections / lessons` migrations + models. Filament resources for all three

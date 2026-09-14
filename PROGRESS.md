@@ -7,12 +7,12 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Phase 0 — Scaffold
-- [x] `laravel new` w/ react-starter-kit — Laravel 12.69.2, React 19, Inertia 2, TS, shadcn
+- [x] `laravel new` w/ react-starter-kit — **Laravel 13.31.0**, React 19, Inertia 2, TS, shadcn
 - [x] Postgres 17.11 (Postgres.app) running; `lms` + `lms_test` created, migrations run
-- [x] Filament 4 at `/admin`, gated on `UserRole::Admin` (5 access tests)
-- [x] Pest replaces PHPUnit; 31 passed. Pint clean.
+- [x] **Filament 5.8.1** at `/admin`, gated on `UserRole::Admin` (5 access tests)
+- [x] **Pest 5** replaces PHPUnit; 31 passed. Pint clean.
 - [x] `storage:link` + `storage/app/public/videos` (gitignored, `.gitkeep` only)
-- [x] Committed `fa69c08`
+- [x] Committed `fa69c08`, upgraded in `ff83977`
 
 ## Phase 1 — Content model + admin
 - [ ] Migrations: courses, sections, lessons
@@ -60,6 +60,21 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### 2026-09-14 — upgraded to Laravel 13
+Scaffolded on 12.69.2, then moved to latest: **Laravel 13.31.0 · Filament 5.8.1 · Pest 5 ·
+Tinker 3 · Livewire 4** (Filament 5 pulls Livewire 4). 31 tests still green, no code changes
+needed — we use very little Filament surface yet, which is why this was cheap. Doing it now
+rather than after Phase 1 was the whole point.
+
+**Held back deliberately:** Inertia stays at 2.0.27 (it supports Laravel 13). Inertia 3 is
+out but would drag `@inertiajs/react` v3 and the starter kit's frontend along with it —
+a separate migration with no benefit to us today.
+
+**Found and fixed:** the starter kit ships `minimum-stability: dev`. Stable `ramsey/uuid
+4.9.3` caps `brick/math` at `<=0.18`; composer took `brick/math 0.19.1`, found no stable
+uuid that fit, and silently locked a `4.x-dev` git branch. Set `minimum-stability: stable`
+— lock is now 100% tagged releases. Worth knowing this default is there.
 
 ### 2026-09-14 — Phase 0 done
 Toolchain found: PHP 8.4.17 (MAMP, has `pdo_pgsql`), Composer 2.9, Node 24. No brew, no
