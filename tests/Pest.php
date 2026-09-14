@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Course;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +47,33 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
-{
-    // ..
+/**
+ * Drives a purchase all the way through the stand-in gateway.
+ *
+ * Buying is two steps now — start a checkout, then the gateway confirms out of
+ * band — so tests that only care about the end state go through here rather
+ * than repeating both halves.
+ */
+function buyCourse(
+    TestCase $test,
+    Course $course,
+    User $buyer,
+    array $payload = [],
+): Order {
+    $test->actingAs($buyer)->post("/courses/{$course->slug}/purchase", $payload);
+
+    $order = Order::where('user_id', $buyer->id)
+        ->where('course_id', $course->id)
+        ->latest('id')
+        ->firstOrFail();
+
+    if ($order->isPending()) {
+        $test->postJson('/payments/callback', [
+            'reference' => $order->reference,
+            'outcome' => 'paid',
+            'secret' => config('services.fake_gateway.secret'),
+        ]);
+    }
+
+    return $order->fresh();
 }

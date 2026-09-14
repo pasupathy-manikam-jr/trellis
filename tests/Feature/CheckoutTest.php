@@ -19,15 +19,11 @@ function sellableCourse(int $priceCents = 4900): Course
     return $course;
 }
 
-test('buying a course records the order and grants access in one go', function () {
+test('buying a course records the order and grants access once the gateway confirms', function () {
     $course = sellableCourse(4900);
     $user = User::factory()->create();
 
-    $this->actingAs($user)
-        ->post("/courses/{$course->slug}/purchase")
-        ->assertRedirect("/learn/{$course->slug}");
-
-    $order = Order::sole();
+    $order = buyCourse($this, $course, $user);
 
     expect($order->subtotal_cents)->toBe(4900)
         ->and($order->discount_cents)->toBe(0)
@@ -41,7 +37,7 @@ test('a free course takes the same path and is recorded as free', function () {
     $course = sellableCourse(0);
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post("/courses/{$course->slug}/purchase")->assertRedirect();
+    buyCourse($this, $course, $user);
 
     expect(Order::sole()->total_cents)->toBe(0)
         ->and(Enrollment::sole()->source)->toBe(EnrollmentSource::Free);
@@ -51,8 +47,7 @@ test('a percentage coupon discounts the order', function () {
     $course = sellableCourse(5000);
     Coupon::factory()->percent(25)->create(['code' => 'QUARTER']);
 
-    $this->actingAs(User::factory()->create())
-        ->post("/courses/{$course->slug}/purchase", ['coupon_code' => 'QUARTER']);
+    buyCourse($this, $course, User::factory()->create(), ['coupon_code' => 'QUARTER']);
 
     $order = Order::sole();
 
@@ -65,8 +60,7 @@ test('a fixed-amount coupon discounts the order', function () {
     $course = sellableCourse(4900);
     Coupon::factory()->amount(1000)->create(['code' => 'TENOFF']);
 
-    $this->actingAs(User::factory()->create())
-        ->post("/courses/{$course->slug}/purchase", ['coupon_code' => 'TENOFF']);
+    buyCourse($this, $course, User::factory()->create(), ['coupon_code' => 'TENOFF']);
 
     expect(Order::sole()->total_cents)->toBe(3900);
 });
@@ -75,8 +69,7 @@ test('a discount never exceeds the price', function () {
     $course = sellableCourse(1000);
     Coupon::factory()->amount(999999)->create(['code' => 'HUGE']);
 
-    $this->actingAs(User::factory()->create())
-        ->post("/courses/{$course->slug}/purchase", ['coupon_code' => 'HUGE']);
+    buyCourse($this, $course, User::factory()->create(), ['coupon_code' => 'HUGE']);
 
     $order = Order::sole();
 
@@ -115,9 +108,7 @@ test('redemptions are counted and stop at the limit', function () {
     Coupon::factory()->percent(10)->create(['code' => 'TWICE', 'max_redemptions' => 2]);
 
     foreach (range(1, 2) as $i) {
-        $this->actingAs(User::factory()->create())
-            ->post("/courses/{$course->slug}/purchase", ['coupon_code' => 'TWICE'])
-            ->assertSessionHasNoErrors();
+        buyCourse($this, $course, User::factory()->create(), ['coupon_code' => 'TWICE']);
     }
 
     expect(Coupon::sole()->redeemed_count)->toBe(2);
@@ -129,11 +120,11 @@ test('redemptions are counted and stop at the limit', function () {
     expect(Order::count())->toBe(2);
 });
 
-test('buying the same course twice is refused', function () {
+test('buying the same course twice is refused once the first one lands', function () {
     $course = sellableCourse();
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post("/courses/{$course->slug}/purchase")->assertRedirect();
+    buyCourse($this, $course, $user);
     $this->actingAs($user)->post("/courses/{$course->slug}/purchase")->assertForbidden();
 
     expect(Order::count())->toBe(1)
@@ -159,7 +150,7 @@ test('a refund revokes access and frees the redemption', function () {
     $user = User::factory()->create();
     Coupon::factory()->percent(10)->create(['code' => 'BACK', 'max_redemptions' => 1]);
 
-    $this->actingAs($user)->post("/courses/{$course->slug}/purchase", ['coupon_code' => 'BACK']);
+    buyCourse($this, $course, $user, ['coupon_code' => 'BACK']);
 
     $order = Order::sole();
     $admin = User::factory()->create(['role' => UserRole::Admin]);

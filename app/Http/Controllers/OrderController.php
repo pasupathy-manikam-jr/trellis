@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EnrollmentSource;
 use App\Enums\OrderStatus;
 use App\Mail\OrderReceiptMail;
 use App\Models\Coupon;
@@ -12,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,9 +35,9 @@ class OrderController extends Controller
     }
 
     /**
-     * The whole checkout. No gateway is called — a card charge belongs between
-     * validation and the transaction below, and everything downstream of it
-     * (order, coupon redemption, enrolment) already works.
+     * Starts a checkout. The order is created pending and the learner is sent
+     * to the gateway; nothing is granted until the gateway confirms. A free
+     * course skips the gateway, because there is nothing to charge.
      */
     public function store(Request $request, Course $course): RedirectResponse
     {
@@ -54,36 +54,28 @@ class OrderController extends Controller
 
             $subtotal = $course->price_cents;
             $discount = $coupon?->discountFor($subtotal) ?? 0;
-            $total = $subtotal - $discount;
 
-            $order = Order::create([
+            return Order::create([
                 'user_id' => $user->id,
                 'course_id' => $course->id,
                 'coupon_id' => $coupon?->id,
+                'reference' => 'chk_'.Str::lower(Str::random(24)),
                 'subtotal_cents' => $subtotal,
                 'discount_cents' => $discount,
-                'total_cents' => $total,
+                'total_cents' => $subtotal - $discount,
                 'currency' => $course->currency,
-                'status' => OrderStatus::Paid,
-                'paid_at' => now(),
+                'status' => OrderStatus::Pending,
             ]);
-
-            $coupon?->increment('redeemed_count');
-
-            $course->enrollments()->create([
-                'user_id' => $user->id,
-                'source' => $total === 0 ? EnrollmentSource::Free : EnrollmentSource::Purchase,
-                'started_at' => now(),
-            ]);
-
-            return $order;
         });
 
-        // Sent after the transaction commits, so a rolled-back purchase never
-        // produces a receipt for an order that does not exist.
-        Mail::to($user)->send(new OrderReceiptMail($order->load('course', 'coupon')));
+        if ($order->total_cents === 0) {
+            $order->confirm();
+            Mail::to($user)->send(new OrderReceiptMail($order->load('course', 'coupon')));
 
-        return to_route('learn.show', $course)->with('success', "You're enrolled.");
+            return to_route('learn.show', $course)->with('success', "You're enrolled.");
+        }
+
+        return redirect()->route('checkout.show', $order);
     }
 
     /**

@@ -37,6 +37,26 @@ output with no hot reload.
 | `admin@lms.test` | `password` |
 | `student@lms.test` | `password` |
 
+## Checkout
+
+There is no payment provider. A stand-in gateway fills the seam so the real
+shape of a checkout is exercised: the order is created **pending**, you are sent
+to a payment page, and a separate callback — not the browser redirect — is what
+grants access.
+
+The page offers three outcomes: pay, declined card, abandon. The callback is
+idempotent, so a replayed confirmation enrols once and sends one receipt.
+
+`FAKE_GATEWAY_SECRET` in `.env` stands in for signature verification.
+
+**These routes are registered only in `local` and `testing`.** A fake payment
+page on a live site would be the worst bug in this project, so it is absent from
+the route table in production rather than merely guarded — there is a test that
+boots the app as production and checks.
+
+Swapping in a real provider means replacing the page and the callback; the
+pending → confirmed flow, idempotency, coupon spending and receipts stay put.
+
 ## pgAdmin
 
 Installed at `/Applications/pgAdmin 4.app` (v9.17). On first launch it asks you to set a

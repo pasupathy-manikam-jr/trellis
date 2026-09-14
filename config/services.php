@@ -3,6 +3,15 @@
 return [
 
     /*
+     * Stands in for a payment provider while there is none. The routes that use
+     * it are registered only in the local environment; the secret is what makes
+     * the callback unforgeable in the meantime.
+     */
+    'fake_gateway' => [
+        'secret' => env('FAKE_GATEWAY_SECRET', 'local-gateway-secret'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Third Party Services
     |--------------------------------------------------------------------------

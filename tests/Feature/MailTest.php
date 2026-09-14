@@ -30,7 +30,7 @@ test('a purchase sends a receipt with the right totals', function () {
     Coupon::factory()->percent(20)->create(['code' => 'FIFTH']);
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post("/courses/{$course->slug}/purchase", ['coupon_code' => 'FIFTH']);
+    buyCourse($this, $course, $user, ['coupon_code' => 'FIFTH']);
 
     Mail::assertSent(OrderReceiptMail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email)

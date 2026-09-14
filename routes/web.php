@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\Checkout\FakeGatewayController;
+use App\Http\Controllers\Checkout\PaymentCallbackController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearnController;
@@ -99,6 +101,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 });
+
+/*
+ * The stand-in payment gateway. Registered only locally: a fake checkout page
+ * reachable on a live site would be the worst bug in this project, so it is
+ * absent from the route table entirely rather than merely guarded.
+ */
+if (app()->environment('local', 'testing')) {
+    Route::post('payments/callback', [PaymentCallbackController::class, 'handle'])->name('payments.callback');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('checkout/{order:reference}', [FakeGatewayController::class, 'show'])->name('checkout.show');
+        Route::post('checkout/{order:reference}', [FakeGatewayController::class, 'simulate'])->name('checkout.simulate');
+    });
+}
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
