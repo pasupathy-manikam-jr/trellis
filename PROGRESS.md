@@ -92,9 +92,15 @@ grading, the player payload and every existing test carried on unchanged — all
 covered that, and it would have been a quiet, confusing bug. `Quiz::moveQuestion()`
 now owns it, and the routes are quiz-scoped.
 
-**Still missing from Moodle's version:** random selection from a category per
-attempt, a bank browsing UI, and QTI. `question_categories` exists and is unused
-until there is somewhere to manage it.
+The bank now has a page of its own, with categories, and each question shows
+which quizzes depend on it. `question_categories` is no longer a table with
+nothing pointing at it.
+
+**Still missing from Moodle's version:** random selection per attempt, and QTI.
+Random is deliberately deferred rather than forgotten — grading has to happen
+against the questions a learner was actually shown, so `quiz_attempts` would
+need to record its own question set instead of reading the quiz's. That changes
+the attempt model, which is a bigger job than it looks.
 
 ### 2026-09-14 — assignments and the gradebook
 The first Moodle-ward slice. PLAN.md's non-goals list has been amended rather

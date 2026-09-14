@@ -100,6 +100,9 @@ function Details({ course, categories }: { course: Course; categories: AdminCate
             <div className="flex items-center justify-between gap-4">
                 <h2 className="font-semibold">Details</h2>
                 <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/courses/${course.slug}/questions`}>Question bank</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
                     <Link href={`/admin/courses/${course.slug}/gradebook`}>Gradebook</Link>
                 </Button>
                 {course.status === 'published' && (

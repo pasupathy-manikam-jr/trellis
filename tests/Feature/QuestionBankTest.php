@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Option;
 use App\Models\Question;
+use App\Models\QuestionCategory;
 use App\Models\Quiz;
 use App\Models\Section;
 use App\Models\User;
@@ -151,4 +152,90 @@ test('another instructor cannot reorder or remove your questions', function () {
         ->assertForbidden();
 
     expect($this->quiz->questions()->count())->toBe(1);
+});
+
+test('the bank lists every question with what uses it', function () {
+    $question = Question::factory()->for($this->quiz)->create(['prompt' => 'Reused everywhere']);
+    Option::factory()->for($question)->create(['is_correct' => true]);
+
+    $this->actingAs($this->staff)
+        ->get("/admin/courses/{$this->course->slug}/questions")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/question-bank')
+            ->has('questions', 1)
+            ->where('questions.0.prompt', 'Reused everywhere')
+            ->where('questions.0.used_by.0', 'Practice')
+        );
+});
+
+test('a question can be written straight into the bank, attached to nothing', function () {
+    $this->actingAs($this->staff)
+        ->post("/admin/courses/{$this->course->slug}/questions", [
+            'type' => 'single',
+            'prompt' => 'Written for later',
+            'points' => 3,
+            'options' => [
+                ['text' => 'Right', 'is_correct' => true],
+                ['text' => 'Wrong', 'is_correct' => false],
+            ],
+        ])
+        ->assertRedirect();
+
+    $question = Question::sole();
+
+    expect($question->course_id)->toBe($this->course->id)
+        ->and($question->quizzes()->count())->toBe(0)
+        ->and($question->options()->count())->toBe(2);
+});
+
+test('categories file questions and outlive being deleted', function () {
+    $this->actingAs($this->staff)
+        ->post("/admin/courses/{$this->course->slug}/question-categories", ['name' => 'Fundamentals'])
+        ->assertRedirect();
+
+    $category = QuestionCategory::sole();
+    $question = Question::factory()->for($this->quiz)->create();
+    $question->update(['question_category_id' => $category->id]);
+
+    $this->actingAs($this->staff)
+        ->delete("/admin/question-categories/{$category->id}")
+        ->assertRedirect();
+
+    // The folder goes; the question stays, unfiled.
+    expect(QuestionCategory::count())->toBe(0)
+        ->and(Question::whereKey($question->id)->exists())->toBeTrue()
+        ->and($question->fresh()->question_category_id)->toBeNull();
+});
+
+test('editing a bank question changes it in every quiz using it', function () {
+    $question = Question::factory()->for($this->quiz)->create(['prompt' => 'Before']);
+    Option::factory()->for($question)->create(['is_correct' => true]);
+    $final = quizOn($this->course, 'Final');
+    $final->addQuestion($question);
+
+    $this->actingAs($this->staff)->patch("/admin/questions/{$question->id}", [
+        'type' => 'single',
+        'prompt' => 'After',
+        'points' => 1,
+        'options' => [
+            ['text' => 'Right', 'is_correct' => true],
+            ['text' => 'Wrong', 'is_correct' => false],
+        ],
+    ])->assertRedirect();
+
+    expect($this->quiz->questions()->sole()->prompt)->toBe('After')
+        ->and($final->questions()->sole()->prompt)->toBe('After');
+});
+
+test('the bank is closed to other instructors', function () {
+    $rival = User::factory()->create(['role' => UserRole::Instructor]);
+
+    $this->actingAs($rival)
+        ->get("/admin/courses/{$this->course->slug}/questions")
+        ->assertForbidden();
+
+    $this->actingAs($rival)
+        ->post("/admin/courses/{$this->course->slug}/question-categories", ['name' => 'Mine'])
+        ->assertForbidden();
 });

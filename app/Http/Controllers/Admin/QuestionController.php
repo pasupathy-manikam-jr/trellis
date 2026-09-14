@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\QuestionType;
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Question;
 use App\Models\Quiz;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,28 @@ class QuestionController extends Controller
         return back()->with('success', $questions->count().' added from the bank.');
     }
 
+    /** Writes a question into the bank without attaching it to anything yet. */
+    public function storeInBank(Request $request, Course $course): RedirectResponse
+    {
+        $this->authorize('manage', $course);
+
+        $data = $this->validated($request);
+
+        DB::transaction(function () use ($course, $data, $request) {
+            $question = Question::create([
+                'course_id' => $course->id,
+                'question_category_id' => $request->input('question_category_id'),
+                'type' => $data['type'],
+                'prompt' => $data['prompt'],
+                'points' => $data['points'],
+            ]);
+
+            $this->syncOptions($question, $data['options']);
+        });
+
+        return back()->with('success', 'Added to the bank.');
+    }
+
     public function store(Request $request, Quiz $quiz): RedirectResponse
     {
         $this->authorize('manage', $quiz->course());
@@ -63,15 +86,18 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question): RedirectResponse
     {
-        $this->authorize('manage', $question->course());
+        $this->authorize('manage', $question->course);
 
         $data = $this->validated($request);
 
-        DB::transaction(function () use ($question, $data) {
+        DB::transaction(function () use ($question, $data, $request) {
             $question->update([
                 'type' => $data['type'],
                 'prompt' => $data['prompt'],
                 'points' => $data['points'],
+                ...$request->has('question_category_id')
+                    ? ['question_category_id' => $request->input('question_category_id')]
+                    : [],
             ]);
 
             $this->syncOptions($question, $data['options']);
@@ -142,6 +168,7 @@ class QuestionController extends Controller
             'options' => ['required', 'array', 'min:2', 'max:10'],
             'options.*.text' => ['required', 'string', 'max:255'],
             'options.*.is_correct' => ['boolean'],
+            'question_category_id' => ['nullable', 'integer', 'exists:question_categories,id'],
         ]);
 
         $correct = collect($data['options'])->filter(fn ($o) => ! empty($o['is_correct']))->count();

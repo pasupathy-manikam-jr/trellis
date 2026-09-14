@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\GradebookController;
 use App\Http\Controllers\Admin\InsightsController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\QuestionBankController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\SectionController;
@@ -74,6 +75,12 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('courses', AdminCourseController::class)->except('show');
 
     Route::get('insights', InsightsController::class)->name('insights');
+
+    Route::get('courses/{course}/questions', [QuestionBankController::class, 'index'])->name('bank');
+    Route::post('courses/{course}/questions', [QuestionController::class, 'storeInBank'])->name('bank.store');
+    Route::post('courses/{course}/question-categories', [QuestionBankController::class, 'storeCategory'])->name('bank.categories.store');
+    Route::patch('question-categories/{category}/move', [QuestionBankController::class, 'moveCategory'])->name('bank.categories.move');
+    Route::delete('question-categories/{category}', [QuestionBankController::class, 'destroyCategory'])->name('bank.categories.destroy');
 
     Route::get('courses/{course}/gradebook', [GradebookController::class, 'show'])->name('gradebook');
     Route::post('courses/{course}/grade-items', [GradebookController::class, 'store'])->name('grade-items.store');

@@ -92,8 +92,20 @@ Writing a question inside the quiz builder puts it in the bank automatically, so
 the bank fills up as a by-product of ordinary work rather than needing to be
 curated first.
 
-**Not built:** random selection from a category per attempt, and QTI import or
-export. The category table exists and is unused pending a bank UI.
+**The bank has its own page** at `/admin/courses/{course}/questions`: every
+question, what it costs, its options with the right one marked, and which
+quizzes rely on it — so nobody deletes a question without seeing what it holds
+up. Categories are folders; removing one leaves its questions unfiled rather
+than taking them with it.
+
+**Not built: random selection from a category per attempt.** It is not a small
+addition. A learner must be graded on the questions they were actually shown,
+so a random slot has to be resolved when the attempt starts and the chosen set
+stored against it — `quiz_attempts` would need to record its own question list
+rather than reading the quiz's. Worth doing, but it changes the attempt model,
+not just the slot table.
+
+**Also not built:** QTI import or export.
 
 ## Grading
 
