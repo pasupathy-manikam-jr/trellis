@@ -2,7 +2,11 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 5 ✅ complete. All five phases shipped.
+**Now:** paused. All five phases shipped, plus resume, catalogue, Q&A, instructor role,
+stand-in checkout and the handbooks. 238 tests. Public at
+https://github.com/pasupathy-manikam-jr/trellis
+
+**Next direction: Moodle-ward.** See the note at the top of the log.
 
 ---
 
@@ -72,6 +76,36 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 ---
 
 ## Log
+
+### Next session — direction
+The ask is to grow toward what Moodle does. That reverses part of PLAN.md,
+which lists SCORM, LTI, xAPI and weighted gradebooks as explicit non-goals for
+a course-selling product. Do not treat that list as settled any more; treat it
+as the decision that is being revisited.
+
+Worth knowing before picking any of it up:
+
+- **Gradebook** is the biggest one and the most structural. Moodle grades
+  *activities*, not lessons, with weighted categories and per-item scales.
+  Today a course is complete/incomplete per lesson plus a quiz pass mark.
+  This would touch `lesson_completions`, `quiz_attempts` and `progress()`.
+- **SCORM / LTI / xAPI** are the interoperability layer and the reason Moodle
+  is heavy. The Composer packages were scouted in session one and are in
+  PLAN.md's history — `devianl2/laravel-scorm`, `packbackbooks/lti-1p3-tool`,
+  `rusticisoftware/tincan`, `trax2/framework`. Do not hand-roll these.
+- **Cohorts and groups** — Moodle separates enrolment from grouping. Today
+  enrolment is one row per learner per course, with no notion of a cohort.
+- **Assignments with submissions and marking** — the obvious gap next to
+  quizzes; a `lessons.type` of `assignment` plus a submission model.
+- **Course completion rules** — Moodle lets you define what completion *means*
+  per course. Today it is hardcoded: every lesson done.
+
+Still open from before, unrelated to Moodle:
+- No LICENSE file; a public repo without one is all-rights-reserved.
+- CI was removed to get the push through. `gh auth refresh -s workflow` first,
+  then write one that matches this project (Postgres service, Pint, Pest) —
+  the starter kit's ran against SQLite and would fail.
+- The claude.ai handbook artifact is stale now the real one ships in-app.
 
 ### 2026-09-14 — Phase 5 done
 Drip, emails, reviews, insights.
