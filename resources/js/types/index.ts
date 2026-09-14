@@ -45,6 +45,7 @@ export interface Lesson {
     duration_sec: number | null;
     position: number;
     is_preview: boolean;
+    drip_days: number;
     quiz?: Quiz | null;
 }
 
@@ -101,6 +102,7 @@ export interface OutlineLesson {
     is_preview: boolean;
     completed: boolean;
     locked: boolean;
+    unlocks_at: string | null;
 }
 
 export interface OutlineSection {

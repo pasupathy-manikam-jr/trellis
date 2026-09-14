@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 class Lesson extends Model
 {
@@ -47,6 +48,25 @@ class Lesson extends Model
     public function isQuiz(): bool
     {
         return $this->type === LessonType::Quiz;
+    }
+
+    /** When this lesson opens for a given enrolment. */
+    public function unlocksAt(Enrollment $enrollment): Carbon
+    {
+        return $enrollment->started_at->copy()->addDays($this->drip_days);
+    }
+
+    /**
+     * Drip is computed on read from the enrolment's start date — no scheduler,
+     * no stored unlock rows to fall out of step with an edited course.
+     */
+    public function isUnlockedFor(?Enrollment $enrollment): bool
+    {
+        if ($this->drip_days === 0) {
+            return true;
+        }
+
+        return $enrollment !== null && ! $this->unlocksAt($enrollment)->isFuture();
     }
 
     public function completions(): HasMany

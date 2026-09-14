@@ -78,7 +78,11 @@ class LessonController extends Controller
             'content' => ['nullable', 'string'],
             'duration_sec' => ['nullable', 'integer', 'min:0'],
             'is_preview' => ['boolean'],
+            'drip_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
             'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:512000'],
-        ]))->except('video')->all();
+        ]))->except('video')
+            // The column is NOT NULL; an empty field means "no drip", not null.
+            ->map(fn ($value, $key) => $key === 'drip_days' ? (int) $value : $value)
+            ->all();
     }
 }

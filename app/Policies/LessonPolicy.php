@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\CourseStatus;
 use App\Enums\LessonType;
+use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\User;
 
@@ -18,7 +19,7 @@ class LessonPolicy
     {
         $course = $lesson->section->course;
 
-        if ($user?->isAdmin() || $user?->id === $course->instructor_id) {
+        if ($this->isStaff($user, $course)) {
             return true;
         }
 
@@ -30,7 +31,7 @@ class LessonPolicy
             return true;
         }
 
-        return $course->enrollmentFor($user) !== null;
+        return $this->isOpenToLearner($user, $lesson);
     }
 
     /**
@@ -41,13 +42,29 @@ class LessonPolicy
     public function complete(User $user, Lesson $lesson): bool
     {
         return $lesson->type !== LessonType::Quiz
-            && $lesson->section->course->enrollmentFor($user) !== null;
+            && $this->isOpenToLearner($user, $lesson);
     }
 
     /** Sitting the quiz attached to a lesson requires the same access as the lesson. */
     public function attempt(User $user, Lesson $lesson): bool
     {
         return $lesson->type === LessonType::Quiz
-            && $lesson->section->course->enrollmentFor($user) !== null;
+            && $this->isOpenToLearner($user, $lesson);
+    }
+
+    /**
+     * Enrolled *and* past the drip date. Every learner-facing rule goes through
+     * here, so a dripped lesson is shut to the page, the video and the quiz alike.
+     */
+    private function isOpenToLearner(?User $user, Lesson $lesson): bool
+    {
+        $enrollment = $lesson->section->course->enrollmentFor($user);
+
+        return $enrollment !== null && $lesson->isUnlockedFor($enrollment);
+    }
+
+    private function isStaff(?User $user, Course $course): bool
+    {
+        return $user?->isAdmin() || $user?->id === $course->instructor_id;
     }
 }

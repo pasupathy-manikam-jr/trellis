@@ -2,7 +2,7 @@
 
 Status log. Update at the end of each work session. Newest notes at the bottom of a phase.
 
-**Now:** Phase 4 ✅ complete. Next: Phase 5 — drip + polish.
+**Now:** Phase 5 ✅ complete. All five phases shipped.
 
 ---
 
@@ -61,14 +61,43 @@ Status log. Update at the end of each work session. Newest notes at the bottom o
 - [x] ✅ *Done when:* completion yields a verifiable cert
 
 ## Phase 5 — Drip + polish
-- [ ] `drip_days` unlock (computed on read)
-- [ ] Emails: welcome, enrollment receipt, completion (Mailpit)
-- [ ] Reviews
-- [ ] Instructor dashboard
+- [x] `drip_days` unlock, computed on read, enforced in `LessonPolicy`
+- [x] Emails: welcome, receipt, completion (log driver; Mailpit optional)
+- [x] Reviews: enrolled-only, one per learner, average on catalog and course page
+- [x] Instructor dashboard at `/admin/insights` (revenue, completion rate, rating)
+- [x] `window.confirm` replaced with shadcn `AlertDialog`; native date input replaced
+      with a shadcn `Popover` + `Calendar` picker
+- [x] 147 tests (30 new). Pint + tsc clean.
 
 ---
 
 ## Log
+
+### 2026-09-14 — Phase 5 done
+Drip, emails, reviews, insights.
+
+**Drip went into the policy, not the controller.** `LessonPolicy` gained one private
+`isOpenToLearner()` that every learner-facing rule routes through — so a dripped lesson is
+shut to the page, the video stream *and* the quiz at once. Putting the check only on the
+page would have left the video URL open, which is the same mistake Phase 2 caught. Computed
+from `enrollment.started_at`: no scheduler, no unlock rows to drift.
+
+**Two design calls the tests forced:**
+- An unrated course has `average: null`, not `0.0`. Zero renders as a *bad* rating; null
+  renders as "no ratings yet".
+- A course with no enrolments has `completion_rate: null`, not `0%` — nobody failed to
+  finish it, nobody started.
+
+**Mail is sent after the transaction commits**, so a rolled-back purchase never produces a
+receipt for an order that does not exist. The completion mail is gated on
+`wasRecentlyCreated`, so re-running the completion check does not mail twice — there is a
+test for exactly that.
+
+**UI corrections during the phase:** `window.confirm` is gone, replaced by a single
+`ConfirmButton` wrapping shadcn's `AlertDialog` (themed, focus-trapped, Escape-dismissible)
+used at four call sites. The native `<input type="date">` is gone, replaced by a `Popover` +
+`Calendar` picker. `react-day-picker` is pinned to v9 because v10 changed the `classNames`
+API that shadcn's Calendar is written against.
 
 ### 2026-09-14 — Phase 4 done
 Quizzes, grading, certificates.

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\EnrollmentController as AdminEnrollmentController;
+use App\Http\Controllers\Admin\InsightsController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\QuestionController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\LessonCompletionController;
 use App\Http\Controllers\LessonVideoController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QuizAttemptController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CourseController::class, 'home'])->name('home');
@@ -33,6 +35,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('courses/{course}/purchase', [OrderController::class, 'store'])->name('courses.purchase');
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+
+    Route::post('courses/{course}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::delete('reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::get('learn/{course}', [LearnController::class, 'show'])->name('learn.show');
 
     Route::post('lessons/{lesson}/quiz', [QuizAttemptController::class, 'store'])->name('lessons.quiz.attempt');
@@ -51,6 +56,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
     Route::patch('questions/{question}/move', [QuestionController::class, 'move'])->name('questions.move');
     Route::delete('questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+
+    Route::get('insights', InsightsController::class)->name('insights');
 
     Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
     Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Enums\EnrollmentSource;
+use App\Mail\CourseCompletedMail;
 use Database\Factories\EnrollmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Mail;
 
 class Enrollment extends Model
 {
@@ -64,7 +66,15 @@ class Enrollment extends Model
 
         if ($done && ! $this->completed_at) {
             $this->update(['completed_at' => now()]);
-            $this->issueCertificate();
+
+            $certificate = $this->issueCertificate();
+
+            // firstOrCreate, so this only mails on the run that actually issued it.
+            if ($certificate->wasRecentlyCreated) {
+                Mail::to($this->user)->send(
+                    new CourseCompletedMail($certificate->load('course', 'user'))
+                );
+            }
         } elseif (! $done && $this->completed_at) {
             // A certificate attests that the course *was* finished, so un-ticking a
             // lesson reopens the course but does not take the certificate back.

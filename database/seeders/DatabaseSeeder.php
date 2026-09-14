@@ -72,6 +72,8 @@ class DatabaseSeeder extends Seeder
                     'content' => "Placeholder body for “{$lessonTitle}”.",
                     'duration_sec' => $type === LessonType::Video ? 540 : null,
                     'is_preview' => $isPreview,
+                    // The last section drips a week out, so the feature is visible.
+                    'drip_days' => $title === 'Going public' ? 7 : 0,
                 ]);
             }
         }

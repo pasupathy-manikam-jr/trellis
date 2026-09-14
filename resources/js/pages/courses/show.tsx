@@ -1,3 +1,4 @@
+import { Reviews, Stars, type ReviewSummary } from '@/components/reviews';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/public-layout';
@@ -16,9 +17,18 @@ type Props = {
     enrolled: boolean;
     progress: Progress | null;
     can_purchase: boolean;
+    can_review: boolean;
+    reviews: ReviewSummary;
 };
 
-export default function CourseShow({ course, enrolled, progress, can_purchase }: Props) {
+export default function CourseShow({
+    course,
+    enrolled,
+    progress,
+    can_purchase,
+    can_review,
+    reviews,
+}: Props) {
     const sections = course.sections ?? [];
     const lessonCount = sections.reduce((n, s) => n + s.lessons.length, 0);
 
@@ -34,9 +44,15 @@ export default function CourseShow({ course, enrolled, progress, can_purchase }:
                 <div className="lg:col-span-2">
                     <h1 className="text-2xl font-semibold">{course.title}</h1>
                     {course.summary && <p className="text-muted-foreground mt-2">{course.summary}</p>}
-                    {course.instructor && (
-                        <p className="text-muted-foreground mt-2 text-sm">By {course.instructor.name}</p>
-                    )}
+                    <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-3 text-sm">
+                        {course.instructor && <span>By {course.instructor.name}</span>}
+                        {reviews.average !== null && (
+                            <span className="flex items-center gap-1.5">
+                                <Stars rating={Math.round(reviews.average)} className="size-3.5" />
+                                {reviews.average.toFixed(1)} ({reviews.count})
+                            </span>
+                        )}
+                    </div>
 
                     {course.description && (
                         <div className="mt-6 text-sm leading-relaxed whitespace-pre-wrap">{course.description}</div>
@@ -87,6 +103,7 @@ export default function CourseShow({ course, enrolled, progress, can_purchase }:
                             </div>
                         ))}
                     </div>
+                    <Reviews course={course} reviews={reviews} canReview={can_review} />
                 </div>
 
                 <aside className="lg:col-span-1">

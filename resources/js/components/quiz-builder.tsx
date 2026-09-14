@@ -1,3 +1,4 @@
+import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -174,13 +175,13 @@ function Questions({ quiz }: { quiz: Quiz }) {
                                     <ChevronDown className="size-4" />
                                     <span className="sr-only">Move down</span>
                                 </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
+                                <ConfirmButton
                                     size="icon"
-                                    className="text-muted-foreground hover:text-red-600"
-                                    onClick={() =>
-                                        confirm('Delete this question?') &&
+                                    className="text-muted-foreground hover:text-destructive"
+                                    title="Delete this question?"
+                                    description="Its options go with it. Attempts already graded are unaffected."
+                                    confirmLabel="Delete question"
+                                    onConfirm={() =>
                                         router.delete(`/admin/questions/${question.id}`, {
                                             preserveScroll: true,
                                         })
@@ -188,7 +189,7 @@ function Questions({ quiz }: { quiz: Quiz }) {
                                 >
                                     <Trash2 className="size-4" />
                                     <span className="sr-only">Delete</span>
-                                </Button>
+                                </ConfirmButton>
                             </div>
                         </li>
                     ))}

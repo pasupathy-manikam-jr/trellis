@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,7 @@ class LearnController extends Controller
 
         return Inertia::render('learn/lesson', [
             'course' => $course->only('id', 'slug', 'title'),
-            'outline' => $this->outline($course, $completedIds, $enrollment !== null || $isStaff),
+            'outline' => $this->outline($course, $completedIds, $enrollment, $isStaff),
             // Only the lesson the policy just cleared carries a body or a video URL.
             'lesson' => [
                 ...$lesson->only('id', 'slug', 'title', 'type', 'content', 'duration_sec', 'is_preview'),
@@ -96,17 +97,23 @@ class LearnController extends Controller
      *
      * @param  list<int>  $completedIds
      */
-    private function outline(Course $course, array $completedIds, bool $hasAccess): array
+    private function outline(Course $course, array $completedIds, ?Enrollment $enrollment, bool $isStaff): array
     {
         return $course->sections()->with('lessons')->get()
             ->map(fn ($section) => [
                 'id' => $section->id,
                 'title' => $section->title,
-                'lessons' => $section->lessons->map(fn (Lesson $l) => [
-                    ...$l->only('id', 'slug', 'title', 'type', 'duration_sec', 'is_preview'),
-                    'completed' => in_array($l->id, $completedIds, true),
-                    'locked' => ! $hasAccess && ! $l->is_preview,
-                ])->all(),
+                'lessons' => $section->lessons->map(function (Lesson $l) use ($completedIds, $enrollment, $isStaff) {
+                    $dripped = ! $isStaff && ! $l->isUnlockedFor($enrollment);
+
+                    return [
+                        ...$l->only('id', 'slug', 'title', 'type', 'duration_sec', 'is_preview'),
+                        'completed' => in_array($l->id, $completedIds, true),
+                        'locked' => $isStaff ? false : (($enrollment === null && ! $l->is_preview) || $dripped),
+                        // Shown as "opens on ..." rather than a bare padlock.
+                        'unlocks_at' => $dripped && $enrollment ? $l->unlocksAt($enrollment) : null,
+                    ];
+                })->all(),
             ])->all();
     }
 }

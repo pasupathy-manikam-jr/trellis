@@ -1,3 +1,4 @@
+import { ConfirmButton } from '@/components/confirm-button';
 import { Flash } from '@/components/flash';
 import { QuizDialog } from '@/components/quiz-builder';
 import { Badge } from '@/components/ui/badge';
@@ -288,6 +289,7 @@ function LessonDialog({
         content: string;
         duration_sec: number | string;
         is_preview: boolean;
+        drip_days: number | string;
         video: File | null;
         _method?: string;
     }>({
@@ -297,6 +299,7 @@ function LessonDialog({
         content: lesson?.content ?? '',
         duration_sec: lesson?.duration_sec ?? '',
         is_preview: lesson?.is_preview ?? false,
+        drip_days: lesson?.drip_days ?? 0,
         video: null,
         // A multipart body can only be POSTed, so an edit spoofs PATCH.
         ...(lesson ? { _method: 'patch' } : {}),
@@ -347,6 +350,18 @@ function LessonDialog({
                                 value={data.duration_sec}
                                 onChange={(e) => setData('duration_sec', e.target.value)}
                             />
+                        </Field>
+
+                        <Field label="Unlock after (days)" error={errors.drip_days}>
+                            <Input
+                                type="number"
+                                min={0}
+                                value={data.drip_days}
+                                onChange={(e) => setData('drip_days', e.target.value)}
+                            />
+                            <p className="text-muted-foreground text-xs">
+                                Days after each learner enrols. 0 opens immediately.
+                            </p>
                         </Field>
                     </div>
 
@@ -429,16 +444,17 @@ function Move({
 
 function Destroy({ url, confirm: message }: { url: string; confirm: string }) {
     return (
-        <Button
-            type="button"
-            variant="ghost"
+        <ConfirmButton
             size="icon"
-            className="text-muted-foreground hover:text-red-600 shrink-0"
-            onClick={() => confirm(message) && router.delete(url, { preserveScroll: true })}
+            className="text-muted-foreground hover:text-destructive shrink-0"
+            title={message}
+            description="This cannot be undone."
+            confirmLabel="Delete"
+            onConfirm={() => router.delete(url, { preserveScroll: true })}
         >
             <Trash2 className="size-4" />
             <span className="sr-only">Delete</span>
-        </Button>
+        </ConfirmButton>
     );
 }
 

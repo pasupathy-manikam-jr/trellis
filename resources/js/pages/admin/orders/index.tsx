@@ -1,3 +1,4 @@
+import { ConfirmButton } from '@/components/confirm-button';
 import { Flash } from '@/components/flash';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,17 +84,17 @@ export default function AdminOrders({ orders }: { orders: Order[] }) {
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             {order.status === 'paid' && (
-                                                <Button
-                                                    variant="ghost"
+                                                <ConfirmButton
                                                     size="sm"
-                                                    onClick={() =>
-                                                        confirm(
-                                                            `Refund ${order.user.name} and revoke access to “${order.course.title}”?`,
-                                                        ) && router.post(`/admin/orders/${order.id}/refund`)
+                                                    title={`Refund ${order.user.name}?`}
+                                                    description={`They lose access to “${order.course.title}” immediately, and any coupon they used is freed for someone else.`}
+                                                    confirmLabel="Refund and revoke"
+                                                    onConfirm={() =>
+                                                        router.post(`/admin/orders/${order.id}/refund`)
                                                     }
                                                 >
                                                     <Undo2 className="size-4" /> Refund
-                                                </Button>
+                                                </ConfirmButton>
                                             )}
                                         </td>
                                     </tr>

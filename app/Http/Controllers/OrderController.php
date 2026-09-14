@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Enums\EnrollmentSource;
 use App\Enums\OrderStatus;
+use App\Mail\OrderReceiptMail;
 use App\Models\Coupon;
 use App\Models\Course;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,14 +49,14 @@ class OrderController extends Controller
 
         $user = $request->user();
 
-        DB::transaction(function () use ($course, $user, $code) {
+        $order = DB::transaction(function () use ($course, $user, $code) {
             $coupon = $code ? $this->redeemableCoupon($code) : null;
 
             $subtotal = $course->price_cents;
             $discount = $coupon?->discountFor($subtotal) ?? 0;
             $total = $subtotal - $discount;
 
-            Order::create([
+            $order = Order::create([
                 'user_id' => $user->id,
                 'course_id' => $course->id,
                 'coupon_id' => $coupon?->id,
@@ -73,7 +75,13 @@ class OrderController extends Controller
                 'source' => $total === 0 ? EnrollmentSource::Free : EnrollmentSource::Purchase,
                 'started_at' => now(),
             ]);
+
+            return $order;
         });
+
+        // Sent after the transaction commits, so a rolled-back purchase never
+        // produces a receipt for an order that does not exist.
+        Mail::to($user)->send(new OrderReceiptMail($order->load('course', 'coupon')));
 
         return to_route('learn.show', $course)->with('success', "You're enrolled.");
     }

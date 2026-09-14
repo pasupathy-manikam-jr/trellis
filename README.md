@@ -58,6 +58,20 @@ be running first (see above) or the connection will refuse.
 
 You will see both `lms` and `lms_test`. Don't edit `lms_test` by hand; every test run drops it.
 
+## Email
+
+`MAIL_MAILER=log` — every message is written to `storage/logs/laravel.log`, no service
+needed. Three are sent: welcome on registration, a receipt on purchase, and the certificate
+when a course is finished.
+
+To read them in a UI instead, run [Mailpit](https://mailpit.axllent.org) and switch to:
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025
+```
+
 ## Notes
 
 - Two databases: `lms` (app) and `lms_test` (tests, wiped per run).

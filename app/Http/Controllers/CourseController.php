@@ -31,6 +31,8 @@ class CourseController extends Controller
                 ->published()
                 ->with('instructor:id,name')
                 ->withCount('lessons')
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
                 ->latest('published_at')
                 ->get([
                     'id', 'instructor_id', 'slug', 'title', 'summary',
@@ -55,11 +57,26 @@ class CourseController extends Controller
 
         $enrollment = $course->enrollmentFor($request->user());
 
+        $reviews = $course->reviews()->with('user:id,name')->latest()->get();
+
         return Inertia::render('courses/show', [
             'course' => $course,
             'enrolled' => $enrollment !== null,
             'progress' => $enrollment?->progress(),
             'can_purchase' => $request->user()?->can('purchase', $course) ?? false,
+            'can_review' => $request->user() !== null && $enrollment !== null,
+            'reviews' => [
+                // null, not 0 — an unrated course has no score, it does not score zero.
+                'average' => $reviews->isEmpty() ? null : round((float) $reviews->avg('rating'), 1),
+                'count' => $reviews->count(),
+                'mine' => $reviews->firstWhere('user_id', $request->user()?->id)
+                    ?->only('id', 'rating', 'body'),
+                'items' => $reviews->map(fn ($review) => [
+                    ...$review->only('id', 'rating', 'body'),
+                    'author' => $review->user->name,
+                    'created_at' => $review->created_at,
+                ])->values(),
+            ],
         ]);
     }
 }

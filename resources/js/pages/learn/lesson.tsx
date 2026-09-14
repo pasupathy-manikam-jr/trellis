@@ -5,7 +5,7 @@ import PublicLayout from '@/layouts/public-layout';
 import { duration } from '@/lib/format';
 import { type Course, type OutlineSection, type PlayerLesson, type PlayerQuiz, type Progress } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Award, Check, Download, FileText, ListChecks, Lock, Play } from 'lucide-react';
+import { Award, CalendarClock, Check, Download, FileText, ListChecks, Lock, Play } from 'lucide-react';
 
 const icons = { video: Play, text: FileText, download: Download, quiz: ListChecks };
 
@@ -90,7 +90,13 @@ export default function LessonPlayer({
                                 </h2>
                                 <ul className="flex flex-col">
                                     {section.lessons.map((item) => {
-                                        const Icon = item.completed ? Check : item.locked ? Lock : icons[item.type];
+                                        const Icon = item.completed
+                                            ? Check
+                                            : item.unlocks_at
+                                              ? CalendarClock
+                                              : item.locked
+                                                ? Lock
+                                                : icons[item.type];
                                         const current = item.id === lesson.id;
 
                                         const inner = (
@@ -99,10 +105,19 @@ export default function LessonPlayer({
                                                     className={`size-4 shrink-0 ${item.completed ? 'text-emerald-600' : 'text-muted-foreground'}`}
                                                 />
                                                 <span className="flex-1 truncate">{item.title}</span>
-                                                {duration(item.duration_sec) && (
-                                                    <span className="text-muted-foreground text-xs">
-                                                        {duration(item.duration_sec)}
+                                                {item.unlocks_at ? (
+                                                    <span className="text-muted-foreground shrink-0 text-xs">
+                                                        {new Date(item.unlocks_at).toLocaleDateString(undefined, {
+                                                            day: 'numeric',
+                                                            month: 'short',
+                                                        })}
                                                     </span>
+                                                ) : (
+                                                    duration(item.duration_sec) && (
+                                                        <span className="text-muted-foreground text-xs">
+                                                            {duration(item.duration_sec)}
+                                                        </span>
+                                                    )
                                                 )}
                                             </>
                                         );
@@ -116,7 +131,11 @@ export default function LessonPlayer({
                                                 {item.locked ? (
                                                     <div
                                                         className={`${className} text-muted-foreground cursor-not-allowed`}
-                                                        title="Enrol to unlock"
+                                                        title={
+                                                            item.unlocks_at
+                                                                ? `Opens ${new Date(item.unlocks_at).toLocaleDateString()}`
+                                                                : 'Enrol to unlock'
+                                                        }
                                                     >
                                                         {inner}
                                                     </div>

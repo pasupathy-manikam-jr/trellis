@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { GraduationCap, LayoutGrid, Library, Receipt, Ticket } from 'lucide-react';
+import { ChartNoAxesColumn, GraduationCap, LayoutGrid, Library, Receipt, Ticket } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -24,6 +24,7 @@ export function AppSidebar() {
         ...(auth.user?.role === 'admin'
             ? [
                   { title: 'Manage courses', url: '/admin/courses', icon: GraduationCap },
+                  { title: 'Insights', url: '/admin/insights', icon: ChartNoAxesColumn },
                   { title: 'All orders', url: '/admin/orders', icon: Receipt },
                   { title: 'Coupons', url: '/admin/coupons', icon: Ticket },
               ]

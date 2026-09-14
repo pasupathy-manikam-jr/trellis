@@ -1,3 +1,5 @@
+import { ConfirmButton } from '@/components/confirm-button';
+import { DatePicker } from '@/components/date-picker';
 import { Flash } from '@/components/flash';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -114,11 +116,11 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
 
                     <div className="grid gap-2">
                         <Label htmlFor="expires">Expires</Label>
-                        <Input
+                        <DatePicker
                             id="expires"
-                            type="date"
                             value={data.expires_at}
-                            onChange={(e) => setData('expires_at', e.target.value)}
+                            onChange={(value) => setData('expires_at', value)}
+                            placeholder="Never"
                         />
                         {errors.expires_at && <p className="text-xs text-red-600">{errors.expires_at}</p>}
                     </div>
@@ -148,18 +150,21 @@ export default function Coupons({ coupons }: { coupons: Coupon[] }) {
                                     </span>
                                 )}
                                 {!coupon.redeemable && <Badge variant="outline">spent</Badge>}
-                                <Button
-                                    variant="ghost"
+                                <ConfirmButton
                                     size="icon"
-                                    className="text-muted-foreground hover:text-red-600 ml-auto"
-                                    onClick={() =>
-                                        confirm(`Delete coupon ${coupon.code}?`) &&
-                                        router.delete(`/admin/coupons/${coupon.code}`)
+                                    className="text-muted-foreground hover:text-destructive ml-auto"
+                                    title={`Delete coupon ${coupon.code}?`}
+                                    description={
+                                        coupon.redeemed_count > 0
+                                            ? `It has been redeemed ${coupon.redeemed_count} time(s). Existing orders keep their discount; the code stops working.`
+                                            : 'The code will stop working immediately.'
                                     }
+                                    confirmLabel="Delete coupon"
+                                    onConfirm={() => router.delete(`/admin/coupons/${coupon.code}`)}
                                 >
                                     <Trash2 className="size-4" />
                                     <span className="sr-only">Delete</span>
-                                </Button>
+                                </ConfirmButton>
                             </li>
                         ))}
                     </ul>
