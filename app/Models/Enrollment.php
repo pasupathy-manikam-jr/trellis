@@ -123,6 +123,33 @@ class Enrollment extends Model
         }
     }
 
+    /**
+     * Where this learner should land when they hit "continue": the first lesson
+     * they have not finished and can actually open. Falls back to the first
+     * unlocked lesson once everything is done, so revisiting still works.
+     */
+    public function resumeLesson(): ?Lesson
+    {
+        $lessons = Lesson::query()
+            ->join('sections', 'sections.id', '=', 'lessons.section_id')
+            ->where('sections.course_id', $this->course_id)
+            ->orderBy('sections.position')
+            ->orderBy('lessons.position')
+            ->select('lessons.*')
+            ->get();
+
+        $completed = LessonCompletion::where('user_id', $this->user_id)
+            ->whereIn('lesson_id', $lessons->pluck('id'))
+            ->pluck('lesson_id')
+            ->all();
+
+        $open = $lessons->filter(fn (Lesson $l) => $l->isUnlockedFor($this));
+
+        return $open->first(fn (Lesson $l) => ! in_array($l->id, $completed, true))
+            ?? $open->first()
+            ?? $lessons->first();
+    }
+
     public function issueCertificate(): Certificate
     {
         return Certificate::firstOrCreate(

@@ -13,16 +13,20 @@ use Inertia\Response;
 
 class LearnController extends Controller
 {
-    /** Entry point: drop the learner at the first lesson of the course. */
-    public function show(Course $course): RedirectResponse
+    /**
+     * Entry point. Enrolled learners resume where they left off — landing them
+     * back on lesson one after twenty lessons is what the button used to do.
+     */
+    public function show(Request $request, Course $course): RedirectResponse
     {
         $this->authorize('learn', $course);
 
-        $first = $course->sections()->with('lessons')->get()->flatMap->lessons->first();
+        $target = $course->enrollmentFor($request->user())?->resumeLesson()
+            ?? $course->sections()->with('lessons')->get()->flatMap->lessons->first();
 
-        abort_if($first === null, 404, 'This course has no lessons yet.');
+        abort_if($target === null, 404, 'This course has no lessons yet.');
 
-        return to_route('learn.lesson', [$course, $first]);
+        return to_route('learn.lesson', [$course, $target]);
     }
 
     public function lesson(Request $request, Course $course, Lesson $lesson): Response
